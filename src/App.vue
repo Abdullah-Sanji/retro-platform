@@ -296,7 +296,7 @@ const goToSetup = () => {
     <JoinModal
       :show="showJoinModal"
       :session-title="sessionQuery?.title"
-      :is-loading="isSessionLoading || isJoining"
+      :is-loading="false"
       @join="handleJoinFromModal"
       @close="handleCloseModal"
     />
