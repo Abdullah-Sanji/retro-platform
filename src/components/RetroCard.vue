@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import { useMutation } from '../composables/useConvex';
+import { useMutation, useQuery } from '../composables/useConvex';
 import { useNotification } from '../composables/useNotification';
 import { api } from '../../convex/_generated/api';
 
@@ -13,7 +13,14 @@ const props = defineProps<{
 const updateCard = useMutation(api.cards.updateCard);
 const deleteCard = useMutation(api.cards.deleteCard);
 const castVote = useMutation(api.votes.castVote);
+const removeVote = useMutation(api.votes.removeVote);
 const notification = useNotification();
+
+// Get user's votes to check if they've already voted on this card
+const userVotes = useQuery(
+  api.votes.getRemainingVotes,
+  () => ({ sessionId: props.card.sessionId, userId: props.userId })
+);
 
 const isEditing = ref(false);
 const editText = ref(props.card.text);
@@ -60,14 +67,32 @@ const handleDelete = async () => {
   }
 };
 
+// Check if user has already voted on this card
+const existingVote = computed(() => {
+  return userVotes.value?.votes?.find(
+    (vote: any) => vote.targetId === props.card._id
+  );
+});
+
 const handleVote = async () => {
   try {
-    await castVote({
-      sessionId: props.card.sessionId,
-      userId: props.userId,
-      targetType: 'card',
-      targetId: props.card._id,
-    });
+    if (existingVote.value) {
+      // Remove the vote if already voted
+      await removeVote({
+        voteId: existingVote.value._id,
+        userId: props.userId,
+      });
+      notification.success('Vote removed');
+    } else {
+      // Add a new vote
+      await castVote({
+        sessionId: props.card.sessionId,
+        userId: props.userId,
+        targetType: 'card',
+        targetId: props.card._id,
+      });
+      notification.success('Vote added');
+    }
   } catch (error: any) {
     notification.error(error.message || 'Failed to vote');
   }
@@ -156,10 +181,13 @@ const authorDisplay = computed(() => {
         <button
           v-if="canVote"
           @click="handleVote"
-          class="p-2 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-lg hover:from-emerald-600 hover:to-green-600 transition-all shadow-lg hover:shadow-xl transform hover:scale-110"
-          title="Vote"
+          class="p-2 rounded-lg transition-all shadow-lg hover:shadow-xl transform hover:scale-110"
+          :class="existingVote
+            ? 'bg-gradient-to-r from-emerald-600 to-green-600 text-white ring-2 ring-emerald-300'
+            : 'bg-gradient-to-r from-emerald-500 to-green-500 text-white hover:from-emerald-600 hover:to-green-600'"
+          :title="existingVote ? 'Remove vote' : 'Vote'"
         >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-4 h-4" :fill="existingVote ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
           </svg>
         </button>

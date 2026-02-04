@@ -33,7 +33,7 @@ const handleClose = () => {
   <Transition name="modal">
     <div
       v-if="show"
-      class="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/50 backdrop-blur-sm"
+      class="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/50 backdrop-blur-sm h-screen"
       @click.self="handleClose"
     >
       <div

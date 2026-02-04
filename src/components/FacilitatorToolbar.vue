@@ -114,7 +114,7 @@ const confirmEndSession = async () => {
     <!-- Phase Change Confirmation Modal -->
     <div
       v-if="showPhaseConfirm"
-      class="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/50 backdrop-blur-sm"
+      class="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/50 backdrop-blur-sm h-screen"
       @click.self="showPhaseConfirm = false"
     >
       <div class="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-8 max-w-md w-full border border-gray-100">
@@ -147,7 +147,7 @@ const confirmEndSession = async () => {
     <!-- End Session Confirmation Modal -->
     <div
       v-if="showEndConfirm"
-      class="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/50 backdrop-blur-sm"
+      class="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/50 backdrop-blur-sm h-screen"
       @click.self="showEndConfirm = false"
     >
       <div class="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-8 max-w-md w-full border border-gray-100">

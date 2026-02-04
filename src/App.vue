@@ -190,14 +190,16 @@ const goToSetup = () => {
           <!-- Create Session Card -->
           <div class="group relative">
             <div class="absolute inset-0 bg-gradient-to-r from-sky-300 to-blue-300 rounded-3xl blur-lg opacity-40 group-hover:opacity-60 transition-opacity"></div>
-            <div class="relative bg-white/95 backdrop-blur-xl rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 border border-sky-100">
-              <div class="w-16 h-16 bg-gradient-to-br from-sky-400 to-blue-500 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-lg">
-                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                </svg>
+            <div class="relative flex flex-col justify-between h-full bg-white/95 backdrop-blur-xl rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 border border-sky-100">
+              <div>
+                <div class="w-16 h-16 bg-gradient-to-br from-sky-400 to-blue-500 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-lg">
+                  <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                  </svg>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-800 mb-3">Create Session</h2>
+                <p class="text-gray-600 mb-6 leading-relaxed">Start a new retrospective and invite your team to collaborate in real-time</p>
               </div>
-              <h2 class="text-2xl font-bold text-gray-800 mb-3">Create Session</h2>
-              <p class="text-gray-600 mb-6 leading-relaxed">Start a new retrospective and invite your team to collaborate in real-time</p>
               <button
                 @click="goToSetup"
                 class="w-full px-6 py-4 bg-gradient-to-r from-sky-500 to-blue-500 text-white font-semibold rounded-xl hover:from-sky-600 hover:to-blue-600 transition-all transform hover:scale-105 shadow-lg hover:shadow-xl"

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import { useMutation } from '../composables/useConvex';
+import { useMutation, useQuery } from '../composables/useConvex';
 import { useNotification } from '../composables/useNotification';
 import { api } from '../../convex/_generated/api';
 import RetroCard from './RetroCard.vue';
@@ -17,8 +17,15 @@ const props = defineProps<{
 const updateGroup = useMutation(api.groups.updateGroup);
 const deleteGroup = useMutation(api.groups.deleteGroup);
 const castVote = useMutation(api.votes.castVote);
+const removeVote = useMutation(api.votes.removeVote);
 const moveCardToGroup = useMutation(api.cards.moveCardToGroup);
 const notification = useNotification();
+
+// Get user's votes to check if they've already voted on this group
+const userVotes = useQuery(
+  api.votes.getRemainingVotes,
+  () => ({ sessionId: props.sessionId, userId: props.userId })
+);
 
 const isEditingTitle = ref(false);
 const editTitle = ref(props.group.title);
@@ -56,14 +63,32 @@ const handleDeleteGroup = async () => {
   }
 };
 
+// Check if user has already voted on this group
+const existingVote = computed(() => {
+  return userVotes.value?.votes?.find(
+    (vote: any) => vote.targetId === props.group._id
+  );
+});
+
 const handleVoteGroup = async () => {
   try {
-    await castVote({
-      sessionId: props.sessionId,
-      userId: props.userId,
-      targetType: 'group',
-      targetId: props.group._id,
-    });
+    if (existingVote.value) {
+      // Remove the vote if already voted
+      await removeVote({
+        voteId: existingVote.value._id,
+        userId: props.userId,
+      });
+      notification.success('Vote removed');
+    } else {
+      // Add a new vote
+      await castVote({
+        sessionId: props.sessionId,
+        userId: props.userId,
+        targetType: 'group',
+        targetId: props.group._id,
+      });
+      notification.success('Vote added');
+    }
   } catch (error: any) {
     notification.error(error.message || 'Failed to vote');
   }
@@ -153,10 +178,13 @@ const handleDrop = async (event: DragEvent) => {
         <button
           v-if="canVote"
           @click="handleVoteGroup"
-          class="p-1.5 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors"
-          title="Vote for group"
+          class="p-1.5 rounded transition-colors"
+          :class="existingVote
+            ? 'bg-purple-700 text-white ring-2 ring-purple-300 hover:bg-purple-800'
+            : 'bg-purple-600 text-white hover:bg-purple-700'"
+          :title="existingVote ? 'Remove vote from group' : 'Vote for group'"
         >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-4 h-4" :fill="existingVote ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
           </svg>
         </button>
