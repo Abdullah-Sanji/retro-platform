@@ -26,4 +26,3 @@ dist-ssr
 # Convex
 .env
 .env.local
-convex/_generated/
