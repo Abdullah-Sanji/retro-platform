@@ -3,6 +3,7 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 
 const props = defineProps<{
   endsAt?: number; // Timestamp when timer ends
+  duration?: number; // Timer duration in minutes
 }>();
 
 const emit = defineEmits<{
@@ -12,10 +13,20 @@ const emit = defineEmits<{
 const now = ref(Date.now());
 const intervalId = ref<number | null>(null);
 
+const isRunning = computed(() => {
+  return props.endsAt && props.endsAt > now.value;
+});
+
 const timeRemaining = computed(() => {
-  if (!props.endsAt) return null;
-  const remaining = Math.max(0, props.endsAt - now.value);
-  return remaining;
+  if (isRunning.value && props.endsAt) {
+    // Timer is running - show countdown
+    const remaining = Math.max(0, props.endsAt - now.value);
+    return remaining;
+  } else if (props.duration) {
+    // Timer not started - show initial duration
+    return props.duration * 60 * 1000;
+  }
+  return null;
 });
 
 const minutes = computed(() => {
@@ -33,18 +44,24 @@ const formattedTime = computed(() => {
 });
 
 const percentage = computed(() => {
-  if (!props.endsAt) return 100;
-  const total = props.endsAt - (props.endsAt - (timeRemaining.value || 0));
-  return Math.max(0, Math.min(100, (timeRemaining.value || 0) / total * 100));
+  if (!isRunning.value) return 100; // Show full circle when not running
+  if (!props.endsAt || !props.duration) return 100;
+
+  const totalDuration = props.duration * 60 * 1000;
+  const elapsed = Date.now() - (props.endsAt - totalDuration);
+  const remaining = props.endsAt - Date.now();
+  return Math.max(0, Math.min(100, (remaining / totalDuration) * 100));
 });
 
 const colorClass = computed(() => {
+  if (!isRunning.value) return 'text-blue-600'; // Blue when not started
   if (minutes.value > 5) return 'text-green-600';
   if (minutes.value > 2) return 'text-yellow-600';
   return 'text-red-600';
 });
 
 const ringColor = computed(() => {
+  if (!isRunning.value) return 'stroke-blue-500'; // Blue when not started
   if (minutes.value > 5) return 'stroke-green-500';
   if (minutes.value > 2) return 'stroke-yellow-500';
   return 'stroke-red-500';
@@ -70,7 +87,7 @@ watch(timeRemaining, (remaining) => {
 </script>
 
 <template>
-  <div v-if="endsAt && timeRemaining !== null" class="flex items-center gap-3 bg-white rounded-lg shadow-md px-4 py-2">
+  <div v-if="duration && timeRemaining !== null" class="flex items-center gap-3 bg-white rounded-lg shadow-md px-4 py-2">
     <div class="relative w-12 h-12">
       <svg class="w-full h-full transform -rotate-90">
         <!-- Background circle -->

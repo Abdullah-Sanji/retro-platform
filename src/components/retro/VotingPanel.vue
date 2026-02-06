@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { useQuery } from '../composables/useConvex';
-import { api } from '../../convex/_generated/api';
+import { useQuery } from '../../composables/useConvex';
+import { api } from '../../../convex/_generated/api';
 
 const props = defineProps<{
   sessionId: string;

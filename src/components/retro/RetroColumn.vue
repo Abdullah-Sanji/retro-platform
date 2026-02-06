@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, computed} from 'vue';
-import { useNotification } from '../composables/useNotification';
-import { useMutation } from '../composables/useConvex';
-import { api } from '../../convex/_generated/api';
+import { useNotification } from '../../composables/useNotification';
+import { useMutation } from '../../composables/useConvex';
+import { api } from '../../../convex/_generated/api';
 import RetroCard from './RetroCard.vue';
 import GroupContainer from './GroupContainer.vue';
 

@@ -4,7 +4,12 @@
       "Bash(find:*)",
       "Bash(npm run dev:*)",
       "Bash(curl:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run build:*)",
+      "Bash(npx convex env set:*)",
+      "Bash(npx convex:*)",
+      "mcp__ide__getDiagnostics"
     ]
   }
 }

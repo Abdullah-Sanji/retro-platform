@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import { useMutation, useQuery } from '../composables/useConvex';
-import { useNotification } from '../composables/useNotification';
-import { api } from '../../convex/_generated/api';
+import { useMutation, useQuery } from '../../composables/useConvex';
+import { useNotification } from '../../composables/useNotification';
+import { api } from '../../../convex/_generated/api';
 
 const props = defineProps<{
   sessionId: string;

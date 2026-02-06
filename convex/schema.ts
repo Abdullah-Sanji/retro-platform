@@ -7,8 +7,25 @@ export default defineSchema({
     name: v.string(), // Display name
     email: v.optional(v.string()), // For authenticated users
     isAnonymous: v.boolean(),
+    // Authentication fields
+    clerkId: v.optional(v.string()), // Clerk user ID
+    // Subscription fields
+    subscriptionStatus: v.optional(
+      v.union(
+        v.literal("free"),
+        v.literal("pro"),
+        v.literal("team")
+      )
+    ),
+    subscriptionId: v.optional(v.string()), // Stripe subscription ID
+    customerId: v.optional(v.string()), // Stripe customer ID
+    // Usage tracking
+    sessionsCreatedThisMonth: v.optional(v.number()),
+    currentPeriodStart: v.optional(v.number()), // Timestamp
     createdAt: v.number(),
-  }).index("by_email", ["email"]),
+  })
+    .index("by_email", ["email"])
+    .index("by_clerkId", ["clerkId"]),
 
   // Retrospective sessions
   sessions: defineTable({

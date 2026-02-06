@@ -1,16 +1,25 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import { useMutation } from '../composables/useConvex';
-import { useNotification } from '../composables/useNotification';
-import { api } from '../../convex/_generated/api';
+import { ref, onMounted } from 'vue';
+import { useUser } from '@clerk/vue';
+import { useMutation } from '../../composables/useConvex';
+import { useNotification } from '../../composables/useNotification';
+import { api } from '../../../convex/_generated/api';
 
 const emit = defineEmits<{
   sessionCreated: [{ sessionId: string; shareLink: string; userId: string }];
 }>();
 
+const { user } = useUser();
 const createSession = useMutation(api.sessions.createSession);
-const createUser = useMutation(api.users.createUser);
+const syncClerkUser = useMutation(api.users.syncClerkUser);
 const notification = useNotification();
+
+// Pre-fill name from Clerk user
+onMounted(() => {
+  if (user.value) {
+    facilitatorName.value = user.value.fullName || user.value.firstName || '';
+  }
+});
 
 const title = ref('');
 const teamName = ref('');
@@ -58,10 +67,17 @@ const handleCreateSession = async () => {
   isCreating.value = true;
 
   try {
-    // Create facilitator user
-    const userResult = await createUser({
-      name: facilitatorName.value.trim(),
-      isAnonymous: false,
+    // Sync Clerk user with Convex
+    if (!user.value) {
+      notification.error('Please sign in to create a session');
+      isCreating.value = false;
+      return;
+    }
+
+    const userResult = await syncClerkUser({
+      clerkId: user.value.id,
+      name: facilitatorName.value.trim() || user.value.fullName || user.value.firstName || 'User',
+      email: user.value.primaryEmailAddress?.emailAddress || '',
     });
 
     // Create session

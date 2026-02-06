@@ -10,8 +10,10 @@
 
 import type * as actionItems from "../actionItems.js";
 import type * as cards from "../cards.js";
+import type * as crons from "../crons.js";
 import type * as groups from "../groups.js";
 import type * as sessions from "../sessions.js";
+import type * as stripe from "../stripe.js";
 import type * as users from "../users.js";
 import type * as votes from "../votes.js";
 
@@ -24,8 +26,10 @@ import type {
 declare const fullApi: ApiFromModules<{
   actionItems: typeof actionItems;
   cards: typeof cards;
+  crons: typeof crons;
   groups: typeof groups;
   sessions: typeof sessions;
+  stripe: typeof stripe;
   users: typeof users;
   votes: typeof votes;
 }>;
