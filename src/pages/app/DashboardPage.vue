@@ -5,6 +5,7 @@ import { useUser } from '@clerk/vue'
 import { useQuery, useMutation } from '@/composables/useConvex'
 import { useNotification } from '@/composables/useNotification'
 import { useStripe } from '@/composables/useStripe'
+import LogoIcon from '@/components/shared/LogoIcon.vue'
 import { api } from '../../../convex/_generated/api'
 import type { Id } from '../../../convex/_generated/dataModel'
 
@@ -83,8 +84,11 @@ const handleManageBilling = async () => {
     <header class="bg-white border-b border-gray-200 sticky top-0 z-10">
       <div class="max-w-7xl mx-auto px-6 py-4">
         <div class="flex items-center justify-between">
-          <router-link to="/" class="text-2xl font-bold bg-gradient-to-r from-sky-600 to-blue-600 bg-clip-text text-transparent">
-            RetroPlatform
+          <router-link to="/" class="flex items-center gap-3 group">
+            <LogoIcon size="md" class="group-hover:scale-110 transition-transform" />
+            <span class="text-2xl font-bold bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 bg-clip-text text-transparent">
+              RetroPlatform
+            </span>
           </router-link>
           <router-link
             to="/app/create"

@@ -112,3 +112,52 @@ export const deleteActionItem = mutation({
     return { success: true };
   },
 });
+
+// Bulk create AI-generated action items (facilitator only)
+export const bulkCreateActionItems = mutation({
+  args: {
+    sessionId: v.id("sessions"),
+    userId: v.id("users"),
+    items: v.array(
+      v.object({
+        title: v.string(),
+        description: v.optional(v.string()),
+        priority: v.optional(v.string()),
+        category: v.optional(v.string()),
+      })
+    ),
+  },
+  handler: async (ctx, args) => {
+    const session = await ctx.db.get(args.sessionId);
+    if (!session) throw new Error("Session not found");
+
+    // Verify user is facilitator
+    if (session.facilitatorId !== args.userId) {
+      throw new Error("Only facilitator can create action items");
+    }
+
+    const now = Date.now();
+    const actionItemIds = [];
+
+    for (const item of args.items) {
+      // Create title with metadata if available
+      let fullTitle = item.title;
+      if (item.description) {
+        fullTitle = `${item.title} - ${item.description}`;
+      }
+
+      const actionItemId = await ctx.db.insert("actionItems", {
+        sessionId: args.sessionId,
+        sourceType: "card",
+        sourceId: "", // AI-generated, no specific source
+        title: fullTitle,
+        status: "open",
+        createdAt: now,
+        updatedAt: now,
+      });
+      actionItemIds.push(actionItemId);
+    }
+
+    return { actionItemIds, count: actionItemIds.length };
+  },
+});

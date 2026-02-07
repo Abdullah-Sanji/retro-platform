@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
+import LogoIcon from '@/components/shared/LogoIcon.vue'
 
 const route = useRoute()
 </script>
@@ -10,8 +11,11 @@ const route = useRoute()
     <header class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200">
       <nav class="max-w-7xl mx-auto px-6 py-4">
         <div class="flex items-center justify-between">
-          <router-link to="/" class="text-2xl font-bold bg-gradient-to-r from-sky-600 to-blue-600 bg-clip-text text-transparent">
-            RetroPlatform
+          <router-link to="/" class="flex items-center gap-3 group">
+            <LogoIcon size="md" class="group-hover:scale-110 transition-transform" />
+            <span class="text-2xl font-bold bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 bg-clip-text text-transparent">
+              RetroPlatform
+            </span>
           </router-link>
 
           <div class="hidden md:flex items-center gap-8">
@@ -47,8 +51,11 @@ const route = useRoute()
       <div class="max-w-7xl mx-auto px-6">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
-            <h3 class="text-xl font-bold mb-4">RetroPlatform</h3>
-            <p class="text-gray-400">Empower your team with better retrospectives.</p>
+            <div class="flex items-center gap-3 mb-4">
+              <LogoIcon size="md" />
+              <h3 class="text-xl font-bold">RetroPlatform</h3>
+            </div>
+            <p class="text-gray-400">AI-powered retrospectives for modern teams.</p>
           </div>
           <div>
             <h4 class="font-semibold mb-3">Product</h4>

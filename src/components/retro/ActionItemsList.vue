@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue';
 import { useMutation, useQuery } from '../../composables/useConvex';
 import { useNotification } from '../../composables/useNotification';
+import { generateAIActionItems } from '../../composables/useAIActionItems';
 import { api } from '../../../convex/_generated/api';
 
 const props = defineProps<{
@@ -16,7 +17,10 @@ const props = defineProps<{
 const updateActionItem = useMutation(api.actionItems.updateActionItem);
 const deleteActionItem = useMutation(api.actionItems.deleteActionItem);
 const createActionItem = useMutation(api.actionItems.createActionItem);
+const bulkCreateActionItems = useMutation(api.actionItems.bulkCreateActionItems);
 const notification = useNotification();
+
+const isGeneratingAI = ref(false);
 
 const voteResults = useQuery(
   api.votes.getVoteResults,
@@ -48,6 +52,10 @@ const topVotedItems = computed(() => {
       displayText: text.length > 50 ? text.substring(0, 50) + '...' : text,
     };
   });
+});
+
+const votedItemsCount = computed(() => {
+  return voteResults.value ? Math.min(voteResults.value.length, 10) : 0;
 });
 
 const handleCreateAction = async () => {
@@ -105,6 +113,74 @@ const confirmDelete = async () => {
   }
 };
 
+const handleGenerateAI = async () => {
+  if (isGeneratingAI.value) return;
+
+  try {
+    isGeneratingAI.value = true;
+
+    // Get top voted items (cards and groups)
+    if (!voteResults.value || voteResults.value.length === 0) {
+      notification.warning('No voted items found. Please complete voting phase first.');
+      return;
+    }
+
+    // Take top 10 most voted items
+    const topItems = voteResults.value.slice(0, 10);
+
+    // Extract titles/text from top voted items
+    const itemTitles: string[] = [];
+
+    for (const item of topItems) {
+      if (item.targetType === 'card') {
+        const card = props.cards.find((c: any) => c._id === item.targetId);
+        if (card && card.text && card.text.trim()) {
+          itemTitles.push(card.text);
+        }
+      } else if (item.targetType === 'group') {
+        const group = props.groups.find((g: any) => g._id === item.targetId);
+        if (group && group.title && group.title.trim()) {
+          itemTitles.push(group.title);
+        }
+      }
+    }
+
+    if (itemTitles.length === 0) {
+      notification.warning('No valid items found to generate action items from');
+      return;
+    }
+
+    notification.info(`Generating AI action items from top ${itemTitles.length} voted items...`);
+
+    // Call AI API
+    const recommendations = await generateAIActionItems(itemTitles);
+
+    if (recommendations.length === 0) {
+      notification.warning('No action items were generated');
+      return;
+    }
+
+    // Bulk create action items in Convex
+    const result = await bulkCreateActionItems({
+      sessionId: props.sessionId,
+      userId: props.userId,
+      items: recommendations.map(rec => ({
+        title: rec.title,
+        description: rec.description,
+        priority: rec.priority,
+        category: rec.category,
+      })),
+    });
+
+    notification.success(`Successfully created ${result.count} AI-generated action items! 🎉`);
+  } catch (error) {
+    console.error('Failed to generate AI action items:', error);
+    notification.error('Failed to generate AI action items. Please try again.');
+  } finally {
+    isGeneratingAI.value = false;
+  }
+};
+
 const statusColors = {
   open: 'bg-blue-100 text-blue-800',
   in_progress: 'bg-yellow-100 text-yellow-800',
@@ -122,14 +198,39 @@ const statusLabels = {
   <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
     <div class="flex items-center justify-between mb-4">
       <h2 class="text-xl font-bold text-gray-900">Action Items</h2>
-      
-      <button
-        v-if="isFacilitator && !showCreateForm"
-        @click="showCreateForm = true"
-        class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
-      >
-        + Add Action Item
-      </button>
+
+      <div v-if="isFacilitator && !showCreateForm" class="flex gap-2">
+        <!-- AI Generate Button -->
+        <button
+          @click="handleGenerateAI"
+          :disabled="isGeneratingAI || !voteResults || voteResults.length === 0"
+          :class="[
+            'px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2',
+            isGeneratingAI || !voteResults || voteResults.length === 0
+              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              : 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700 shadow-md hover:shadow-lg'
+          ]"
+          title="Generate action items using AI based on top voted cards/groups"
+        >
+          <svg v-if="!isGeneratingAI" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+          <svg v-else class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          <span v-if="isGeneratingAI">Generating...</span>
+          <span v-else-if="votedItemsCount > 0">AI Generate ({{ votedItemsCount }} items)</span>
+          <span v-else>AI Generate</span>
+        </button>
+
+        <!-- Manual Add Button -->
+        <button
+          @click="showCreateForm = true"
+          class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
+        >
+          + Add Action Item
+        </button>
+      </div>
     </div>
 
     <!-- Create Form -->
