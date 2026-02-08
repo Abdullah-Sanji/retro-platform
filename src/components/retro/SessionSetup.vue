@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useUser } from '@clerk/vue';
-import { useMutation } from '../../composables/useConvex';
+import { useMutation, useQuery } from '../../composables/useConvex';
 import { useNotification } from '../../composables/useNotification';
 import { api } from '../../../convex/_generated/api';
 
@@ -14,6 +14,16 @@ const createSession = useMutation(api.sessions.createSession);
 const syncClerkUser = useMutation(api.users.syncClerkUser);
 const notification = useNotification();
 
+// Get user's subscription status
+const userData = useQuery(
+  api.users.getCurrentUser,
+  computed(() => user.value?.id ? { clerkId: user.value.id } : 'skip')
+);
+
+const userSubscription = computed(() => userData.value?.subscriptionStatus || 'free');
+const isFreeTier = computed(() => userSubscription.value === 'free');
+const isProTier = computed(() => userSubscription.value === 'pro');
+
 // Pre-fill name from Clerk user
 onMounted(() => {
   if (user.value) {
@@ -24,7 +34,7 @@ onMounted(() => {
 const title = ref('');
 const teamName = ref('');
 const facilitatorName = ref('');
-const templateType = ref<'start_stop_continue' | 'mad_sad_glad' | 'went_well_to_improve_actions' | 'custom'>('went_well_to_improve_actions');
+const templateType = ref<'start_stop_continue' | 'mad_sad_glad' | 'went_well_to_improve_actions' | 'custom'>('mad_sad_glad');
 const customColumns = ref<string[]>(['', '', '']);
 const votesPerUser = ref(3);
 const timerEnabled = ref(false);
@@ -32,11 +42,17 @@ const timerDuration = ref(10);
 const isCreating = ref(false);
 
 const templates = [
-  { value: 'start_stop_continue', label: 'Start / Stop / Continue', description: 'Identify actions to start, stop, and continue' },
-  { value: 'mad_sad_glad', label: 'Mad / Sad / Glad', description: 'Express emotions about the sprint' },
-  { value: 'went_well_to_improve_actions', label: 'Went Well / To Improve / Actions', description: 'Classic retrospective format' },
-  { value: 'custom', label: 'Custom', description: 'Create your own columns' },
+  { value: 'start_stop_continue', label: 'Start / Stop / Continue', description: 'Identify actions to start, stop, and continue', requiresPro: true },
+  { value: 'mad_sad_glad', label: 'Mad / Sad / Glad', description: 'Express emotions about the sprint', requiresPro: false },
+  { value: 'went_well_to_improve_actions', label: 'Went Well / To Improve / Actions', description: 'Classic retrospective format', requiresPro: true },
+  { value: 'custom', label: 'Custom', description: 'Create your own columns', requiresPro: true },
 ];
+
+// Check if template is available for user's plan
+const isTemplateAvailable = (template: typeof templates[0]) => {
+  if (!template.requiresPro) return true;
+  return isProTier.value;
+};
 
 const addCustomColumn = () => {
   if (customColumns.value.length < 6) {
@@ -192,20 +208,38 @@ const handleCreateSession = async () => {
             <label
               v-for="template in templates"
               :key="template.value"
-              class="flex items-start p-4 border-2 rounded-lg cursor-pointer transition-all hover:border-blue-400"
-              :class="templateType === template.value ? 'border-blue-500 bg-blue-50' : 'border-gray-200'"
+              class="flex items-start p-4 border-2 rounded-lg transition-all relative"
+              :class="[
+                templateType === template.value ? 'border-blue-500 bg-blue-50' : 'border-gray-200',
+                isTemplateAvailable(template) ? 'cursor-pointer hover:border-blue-400' : 'cursor-not-allowed opacity-60'
+              ]"
             >
               <input
                 v-model="templateType"
                 type="radio"
                 :value="template.value"
+                :disabled="!isTemplateAvailable(template)"
                 class="mt-1 mr-3"
               />
               <div class="flex-1">
-                <div class="font-semibold text-gray-900">{{ template.label }}</div>
+                <div class="flex items-center gap-2">
+                  <span class="font-semibold text-gray-900">{{ template.label }}</span>
+                  <span v-if="template.requiresPro && isFreeTier" class="px-2 py-0.5 bg-yellow-400 text-yellow-900 text-xs font-bold rounded-full">
+                    PRO
+                  </span>
+                </div>
                 <div class="text-sm text-gray-600">{{ template.description }}</div>
               </div>
             </label>
+          </div>
+
+          <!-- Upgrade message for free tier -->
+          <div v-if="isFreeTier" class="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <p class="text-sm text-yellow-800">
+              <strong>Free Plan:</strong> Only "Mad / Sad / Glad" template is available.
+              <router-link to="/pricing" class="text-yellow-900 underline font-semibold">Upgrade to Pro</router-link>
+              for all templates including custom columns.
+            </p>
           </div>
         </div>
 
@@ -246,17 +280,26 @@ const handleCreateSession = async () => {
 
         <!-- Votes Per User -->
         <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-2">
+          <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
             Votes Per User
+            <span v-if="isFreeTier" class="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-bold rounded-full">
+              Max 3 on Free
+            </span>
           </label>
           <input
             v-model.number="votesPerUser"
             type="number"
             min="1"
-            max="10"
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            :max="isFreeTier ? 3 : 10"
+            :disabled="isFreeTier"
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
           />
-          <p class="text-sm text-gray-500 mt-1">Each participant will have {{ votesPerUser }} votes</p>
+          <p class="text-sm text-gray-500 mt-1">
+            <span v-if="isFreeTier">Free plan is limited to 3 votes per user. </span>
+            Each participant will have {{ votesPerUser }} vote{{ votesPerUser !== 1 ? 's' : '' }}
+            <router-link v-if="isFreeTier" to="/pricing" class="text-blue-600 underline font-semibold">Upgrade to Pro</router-link>
+            <span v-if="isFreeTier"> for unlimited votes.</span>
+          </p>
         </div>
 
         <!-- Timer -->

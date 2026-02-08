@@ -4,9 +4,8 @@ import { nanoid } from "nanoid";
 
 // Usage limits by subscription tier
 const USAGE_LIMITS = {
-  free: 5,
+  free: 1,
   pro: Infinity,
-  team: Infinity,
 };
 
 // Template configurations
@@ -58,7 +57,12 @@ export const createSession = mutation({
       const used = facilitator.sessionsCreatedThisMonth || 0;
 
       if (used >= limit) {
-        throw new Error(`Monthly session limit reached (${limit} sessions). Please upgrade your plan.`);
+        throw new Error(`Monthly session limit reached (${limit} session). Please upgrade to Pro for unlimited sessions.`);
+      }
+
+      // Free tier can only use mad_sad_glad template
+      if (subscriptionStatus === "free" && args.templateType !== "mad_sad_glad") {
+        throw new Error("Free tier is limited to Mad, Sad & Glad template. Upgrade to Pro for all templates.");
       }
 
       // Increment session count
@@ -188,6 +192,10 @@ export const getSessionDetails = query({
       ).length,
     }));
 
+    // Get facilitator subscription info
+    const facilitator = await ctx.db.get(session.facilitatorId);
+    const facilitatorSubscription = facilitator?.subscriptionStatus || "free";
+
     return {
       session,
       columns: columns.sort((a, b) => a.order - b.order),
@@ -195,6 +203,7 @@ export const getSessionDetails = query({
       groups: enrichedGroups,
       votes,
       actionItems,
+      facilitatorSubscription,
     };
   },
 });
@@ -407,5 +416,72 @@ export const getUserSessions = query({
       .collect();
 
     return sessions;
+  },
+});
+
+// Get participant count for a session
+export const getSessionParticipantCount = query({
+  args: {
+    sessionId: v.id("sessions"),
+  },
+  handler: async (ctx, args) => {
+    // Count unique users who have created cards in the session
+    const cards = await ctx.db
+      .query("cards")
+      .withIndex("by_session", (q) => q.eq("sessionId", args.sessionId))
+      .collect();
+
+    const uniqueUsers = new Set(cards.map(card => card.authorId));
+    return uniqueUsers.size;
+  },
+});
+
+// Check if user can join session based on participant limits
+export const canJoinSession = query({
+  args: {
+    sessionId: v.id("sessions"),
+  },
+  handler: async (ctx, args) => {
+    const session = await ctx.db.get(args.sessionId);
+    if (!session) return { canJoin: false, reason: "Session not found" };
+
+    const facilitator = await ctx.db.get(session.facilitatorId);
+    if (!facilitator) return { canJoin: false, reason: "Facilitator not found" };
+
+    // Anonymous facilitators have no limits
+    if (facilitator.isAnonymous) {
+      return { canJoin: true };
+    }
+
+    const subscriptionStatus = facilitator.subscriptionStatus || "free";
+
+    // Pro tier has no participant limits
+    if (subscriptionStatus === "pro") {
+      return { canJoin: true };
+    }
+
+    // Free tier has 5 participant limit
+    const cards = await ctx.db
+      .query("cards")
+      .withIndex("by_session", (q) => q.eq("sessionId", args.sessionId))
+      .collect();
+
+    const uniqueUsers = new Set(cards.map(card => card.authorId));
+    const participantCount = uniqueUsers.size;
+
+    if (participantCount >= 5) {
+      return {
+        canJoin: false,
+        reason: "This session has reached the maximum of 5 participants (Free tier limit). The facilitator needs to upgrade to Pro for unlimited participants.",
+        participantCount,
+        limit: 5,
+      };
+    }
+
+    return {
+      canJoin: true,
+      participantCount,
+      limit: 5,
+    };
   },
 });

@@ -75,6 +75,18 @@ const existingVote = computed(() => {
 });
 
 const handleVote = async () => {
+  // Check if user has remaining votes before casting
+  if (!existingVote.value && userVotes.value && userVotes.value.remaining <= 0) {
+    const isUnlimited = userVotes.value.isUnlimited;
+    if (!isUnlimited) {
+      notification.warning(
+        `You've used all ${userVotes.value.total} votes! Upgrade to Pro for unlimited votes.`,
+        5000
+      );
+      return;
+    }
+  }
+
   try {
     if (existingVote.value) {
       // Remove the vote if already voted
@@ -94,7 +106,20 @@ const handleVote = async () => {
       notification.success('Vote added');
     }
   } catch (error: any) {
-    notification.error(error.message || 'Failed to vote');
+    // Parse error message for better user experience
+    const errorMsg = error.message || 'Failed to vote';
+
+    if (errorMsg.includes('Maximum') && errorMsg.includes('votes allowed')) {
+      const voteLimit = errorMsg.match(/\d+/)?.[0] || '3';
+      notification.warning(
+        `You've reached your voting limit of ${voteLimit} votes. Upgrade to Pro for unlimited votes!`,
+        5000
+      );
+    } else if (errorMsg.includes('not active')) {
+      notification.error('Voting is not active in the current phase');
+    } else {
+      notification.error(errorMsg);
+    }
   }
 };
 

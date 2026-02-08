@@ -13,9 +13,30 @@ export const createCard = mutation({
     // Verify session is in collecting or grouping phase
     const session = await ctx.db.get(args.sessionId);
     if (!session) throw new Error("Session not found");
-    
+
     if (session.phase !== "collecting" && session.phase !== "grouping") {
       throw new Error("Cannot add cards in current phase");
+    }
+
+    // Check participant limits for free tier
+    const facilitator = await ctx.db.get(session.facilitatorId);
+    if (facilitator && !facilitator.isAnonymous) {
+      const subscriptionStatus = facilitator.subscriptionStatus || "free";
+
+      // Free tier has 5 participant limit
+      if (subscriptionStatus === "free") {
+        const cards = await ctx.db
+          .query("cards")
+          .withIndex("by_session", (q) => q.eq("sessionId", args.sessionId))
+          .collect();
+
+        const uniqueUsers = new Set(cards.map(card => card.authorId));
+
+        // Check if this is a new user trying to join
+        if (!uniqueUsers.has(args.authorId) && uniqueUsers.size >= 5) {
+          throw new Error("This session has reached the maximum of 5 participants (Free tier limit). The facilitator needs to upgrade to Pro for unlimited participants.");
+        }
+      }
     }
 
     const now = Date.now();

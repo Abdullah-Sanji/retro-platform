@@ -39,8 +39,20 @@ export const castVote = mutation({
       )
       .collect();
 
-    if (userVotes.length >= session.votesPerUser) {
-      throw new Error(`Maximum ${session.votesPerUser} votes allowed`);
+    // Check if session has vote limits (Pro tier has unlimited votes)
+    const facilitator = await ctx.db.get(session.facilitatorId);
+    if (facilitator && !facilitator.isAnonymous) {
+      const subscriptionStatus = facilitator.subscriptionStatus || "free";
+
+      // Pro tier has unlimited votes, free tier respects votesPerUser limit
+      if (subscriptionStatus === "free" && userVotes.length >= session.votesPerUser) {
+        throw new Error(`Maximum ${session.votesPerUser} votes allowed. Upgrade to Pro for unlimited votes!`);
+      }
+    } else {
+      // For anonymous facilitators, enforce the session's votesPerUser limit
+      if (userVotes.length >= session.votesPerUser) {
+        throw new Error(`Maximum ${session.votesPerUser} votes allowed`);
+      }
     }
 
     // Verify target exists
@@ -110,11 +122,21 @@ export const getRemainingVotes = query({
       )
       .collect();
 
+    // Check if Pro tier (unlimited votes)
+    const facilitator = await ctx.db.get(session.facilitatorId);
+    let isUnlimited = false;
+
+    if (facilitator && !facilitator.isAnonymous) {
+      const subscriptionStatus = facilitator.subscriptionStatus || "free";
+      isUnlimited = subscriptionStatus === "pro";
+    }
+
     return {
       used: userVotes.length,
-      total: session.votesPerUser,
-      remaining: session.votesPerUser - userVotes.length,
+      total: isUnlimited ? Infinity : session.votesPerUser,
+      remaining: isUnlimited ? Infinity : session.votesPerUser - userVotes.length,
       votes: userVotes,
+      isUnlimited,
     };
   },
 });

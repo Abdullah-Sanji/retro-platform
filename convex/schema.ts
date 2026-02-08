@@ -13,8 +13,7 @@ export default defineSchema({
     subscriptionStatus: v.optional(
       v.union(
         v.literal("free"),
-        v.literal("pro"),
-        v.literal("team")
+        v.literal("pro")
       )
     ),
     subscriptionId: v.optional(v.string()), // Stripe subscription ID

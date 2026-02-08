@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed } from 'vue';
-import { useQuery } from '../../composables/useConvex';
+import { ref, computed } from 'vue';
+import { useRouter } from 'vue-router';
+import { useQuery, useMutation } from '../../composables/useConvex';
 import { useNotification } from '../../composables/useNotification';
 import { api } from '../../../convex/_generated/api';
 import RetroColumn from './RetroColumn.vue';
@@ -9,8 +10,12 @@ import VotingPanel from './VotingPanel.vue';
 import ActionItemsList from './ActionItemsList.vue';
 import PhaseTimer from './PhaseTimer.vue';
 import TimerControls from './TimerControls.vue';
+import LogoIcon from '../shared/LogoIcon.vue';
 
+const router = useRouter();
 const notification = useNotification();
+const endSession = useMutation(api.sessions.endSession);
+const showExitConfirm = ref(false);
 
 const props = defineProps<{
   sessionId: string;
@@ -25,6 +30,10 @@ const sessionData = useQuery(
 
 const isFacilitator = computed(() => {
   return sessionData.value?.session?.facilitatorId === props.userId;
+});
+
+const facilitatorSubscription = computed(() => {
+  return sessionData.value?.facilitatorSubscription || 'free';
 });
 
 const currentPhase = computed(() => {
@@ -66,6 +75,48 @@ const copyShareLink = () => {
     notification.success('Share link copied to clipboard!');
   } else {
     notification.error('Unable to get share link');
+  }
+};
+
+const handleLogoClick = () => {
+  const session = sessionData.value?.session;
+
+  // If not facilitator, just leave
+  if (!isFacilitator.value) {
+    router.push('/');
+    return;
+  }
+
+  // If session is already completed, just redirect
+  if (session?.phase === 'completed' || !session?.isActive) {
+    router.push('/');
+    return;
+  }
+
+  // Show confirmation modal for active session
+  showExitConfirm.value = true;
+};
+
+const handleConfirmExit = async () => {
+  showExitConfirm.value = false;
+
+  try {
+    // First, download the action items
+    await handleSessionEnded();
+
+    // Then end the session
+    await endSession({
+      sessionId: props.sessionId,
+      userId: props.userId,
+    });
+
+    notification.success('Session ended successfully');
+
+    // Redirect to home
+    router.push('/');
+  } catch (error) {
+    console.error('Failed to end session:', error);
+    notification.error('Failed to end session');
   }
 };
 
@@ -163,29 +214,36 @@ const handleSessionEnded = async () => {
   <div class="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50/30 to-blue-50/30">
     <!-- Header -->
     <header class="glass backdrop-blur-xl border-b border-white/50 sticky top-0 z-10 shadow-lg">
-      <div class="max-w-7xl mx-auto px-6 py-5">
-        <div class="flex items-center justify-between">
-          <div class="flex-1">
-            <div class="flex items-center gap-3 mb-2">
+      <div class="max-w-7xl mx-auto px-6 py-4">
+        <!-- Top Row: Logo + Title + Share -->
+        <div class="flex items-center justify-between gap-6 mb-3">
+          <!-- Logo -->
+          <button
+            @click="handleLogoClick"
+            class="flex items-center gap-3 group hover:scale-105 transition-transform flex-shrink-0"
+            title="Exit session"
+          >
+            <LogoIcon size="md" class="group-hover:rotate-12 transition-transform" />
+            <span class="text-xl font-bold bg-gradient-to-r from-teal-600 via-cyan-600 to-blue-600 bg-clip-text text-transparent">
+              RetroPlatform
+            </span>
+          </button>
+
+          <!-- Title Section -->
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-3 mb-1">
               <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
               <span class="text-xs font-semibold text-purple-600 uppercase tracking-wider">Live Session</span>
             </div>
-            <h1 class="text-3xl font-bold bg-gradient-to-r from-sky-600 to-blue-600 bg-clip-text text-transparent">
+            <h1 class="text-2xl font-bold bg-gradient-to-r from-sky-600 to-blue-600 bg-clip-text text-transparent truncate">
               {{ sessionData?.session?.title }}
             </h1>
-            <p class="text-sm text-gray-600 mt-2 font-medium">
-              {{ sessionData?.session?.teamName }}
-              <span class="mx-2 text-gray-400">•</span>
-              <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-sky-100 to-blue-100 text-sky-700">
-                {{ phaseLabel }}
-              </span>
-            </p>
           </div>
 
           <!-- Share Link Button -->
           <button
             @click="copyShareLink"
-            class="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-500 to-green-500 text-white font-semibold rounded-xl hover:from-emerald-600 hover:to-green-600 transition-all transform hover:scale-105 shadow-lg"
+            class="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-500 to-green-500 text-white font-semibold rounded-xl hover:from-emerald-600 hover:to-green-600 transition-all transform hover:scale-105 shadow-lg flex-shrink-0"
             title="Copy share link"
           >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -193,35 +251,51 @@ const handleSessionEnded = async () => {
             </svg>
             <span class="hidden sm:inline">Share</span>
           </button>
+        </div>
 
-          <!-- Timer Display and Controls -->
-          <div v-if="sessionData?.session?.timerDuration" class="flex items-center gap-3 mx-6">
-            <!-- Timer Display (show when timer is configured) -->
-            <PhaseTimer
-              v-if="showTimer"
-              :ends-at="sessionData?.session?.timerEndsAt"
-              :duration="sessionData?.session?.timerDuration"
-              @time-up="handleTimeUp"
-            />
-
-            <!-- Timer Controls (facilitator only) -->
-            <TimerControls
-              v-if="isFacilitator"
-              :session-id="sessionId"
-              :user-id="userId"
-              :timer-duration="sessionData?.session?.timerDuration"
-              :timer-ends-at="sessionData?.session?.timerEndsAt"
-            />
+        <!-- Bottom Row: Team + Phase + Timer + Facilitator Controls -->
+        <div class="flex items-center justify-between gap-6">
+          <!-- Team Name + Phase -->
+          <div class="flex items-center gap-3 text-sm text-gray-600 font-medium">
+            <span>{{ sessionData?.session?.teamName }}</span>
+            <span class="text-gray-400">•</span>
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-sky-100 to-blue-100 text-sky-700">
+              {{ phaseLabel }}
+            </span>
           </div>
 
-          <div v-if="isFacilitator" class="flex items-center gap-3">
-            <FacilitatorToolbar
-              :session-id="sessionId"
-              :user-id="userId"
-              :current-phase="currentPhase"
-              :session-data="sessionData"
-              @session-ended="handleSessionEnded"
-            />
+          <!-- Right Side: Timer + Facilitator Controls -->
+          <div class="flex items-center gap-4">
+            <!-- Timer Display and Controls -->
+            <div v-if="sessionData?.session?.timerDuration" class="flex items-center gap-3">
+              <!-- Timer Display (show when timer is configured) -->
+              <PhaseTimer
+                v-if="showTimer"
+                :ends-at="sessionData?.session?.timerEndsAt"
+                :duration="sessionData?.session?.timerDuration"
+                @time-up="handleTimeUp"
+              />
+
+              <!-- Timer Controls (facilitator only, collecting phase only) -->
+              <TimerControls
+                v-if="isFacilitator && showTimer"
+                :session-id="sessionId"
+                :user-id="userId"
+                :timer-duration="sessionData?.session?.timerDuration"
+                :timer-ends-at="sessionData?.session?.timerEndsAt"
+              />
+            </div>
+
+            <!-- Facilitator Toolbar -->
+            <div v-if="isFacilitator">
+              <FacilitatorToolbar
+                :session-id="sessionId"
+                :user-id="userId"
+                :current-phase="currentPhase"
+                :session-data="sessionData"
+                @session-ended="handleSessionEnded"
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -274,7 +348,67 @@ const handleSessionEnded = async () => {
         :cards="sessionData.cards"
         :groups="sessionData.groups"
         :is-facilitator="isFacilitator"
+        :facilitator-subscription="facilitatorSubscription"
       />
+    </div>
+
+    <!-- Exit Confirmation Modal -->
+    <div
+      v-if="showExitConfirm"
+      class="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/50 backdrop-blur-sm"
+      @click.self="showExitConfirm = false"
+    >
+      <div class="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full border border-gray-100 transform transition-all">
+        <div class="flex items-center justify-center w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-amber-100 to-orange-100 rounded-full">
+          <svg class="w-8 h-8 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+        </div>
+
+        <h3 class="text-2xl font-bold text-gray-900 mb-3 text-center">End This Session?</h3>
+        <p class="text-gray-600 mb-6 text-center leading-relaxed">
+          This will mark the session as completed and return you to the home page.
+        </p>
+
+        <div class="bg-gradient-to-br from-sky-50 to-blue-50 rounded-xl p-4 mb-6 border border-sky-200">
+          <p class="text-sm font-semibold text-sky-900 mb-2">What will happen:</p>
+          <ul class="space-y-2 text-sm text-sky-800">
+            <li class="flex items-start gap-2">
+              <svg class="w-5 h-5 text-sky-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+              </svg>
+              <span>Download action items report</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <svg class="w-5 h-5 text-sky-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+              </svg>
+              <span>Mark session as completed</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <svg class="w-5 h-5 text-sky-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+              </svg>
+              <span>Return to home page</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="flex gap-3">
+          <button
+            @click="showExitConfirm = false"
+            class="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all"
+          >
+            Cancel
+          </button>
+          <button
+            @click="handleConfirmExit"
+            class="flex-1 px-6 py-3 bg-gradient-to-r from-red-500 to-rose-500 text-white font-semibold rounded-xl hover:from-red-600 hover:to-rose-600 transition-all shadow-lg hover:shadow-xl"
+          >
+            End Session
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </template>

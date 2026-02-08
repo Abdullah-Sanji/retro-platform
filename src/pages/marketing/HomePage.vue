@@ -30,14 +30,6 @@ const sessionQuery = useQuery(
   () => pendingSessionLink.value ? { shareLink: pendingSessionLink.value } : 'skip'
 )
 
-const goToSetup = () => {
-  if (!isSignedIn.value) {
-    notification.warning('Please sign in to create a session')
-    return
-  }
-  router.push('/app/create')
-}
-
 const handleJoinSession = async () => {
   if (!joinLink.value.trim()) return
 
@@ -149,15 +141,15 @@ const handleCloseModal = () => {
 
           <!-- Primary CTA -->
           <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <button
-              @click="goToSetup"
+            <router-link
+              :to="isSignedIn ? '/app/create' : '/pricing'"
               class="group px-8 py-4 bg-gradient-to-r from-teal-600 to-cyan-600 text-white text-lg font-bold rounded-xl hover:from-teal-700 hover:to-cyan-700 transition-all transform hover:scale-105 shadow-xl hover:shadow-2xl flex items-center gap-3"
             >
-              <span>Start AI-Powered Retro</span>
+              <span>{{ isSignedIn ? 'Create Session' : 'Get Started' }}</span>
               <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
               </svg>
-            </button>
+            </router-link>
             <router-link
               to="/features"
               class="px-8 py-4 bg-white/80 backdrop-blur-md text-gray-700 text-lg font-semibold rounded-xl hover:bg-white transition-all border-2 border-gray-200 hover:border-teal-300"
@@ -182,12 +174,12 @@ const handleCloseModal = () => {
                 <h2 class="text-2xl font-bold text-gray-800 mb-3">Create Session</h2>
                 <p class="text-gray-600 mb-6 leading-relaxed">Start a new AI-powered retrospective and invite your team to collaborate in real-time</p>
               </div>
-              <button
-                @click="goToSetup"
-                class="w-full px-6 py-4 bg-gradient-to-r from-teal-600 to-cyan-600 text-white font-semibold rounded-xl hover:from-teal-700 hover:to-cyan-700 transition-all transform hover:scale-105 shadow-lg hover:shadow-xl"
+              <router-link
+                :to="isSignedIn ? '/app/create' : '/pricing'"
+                class="block w-full px-6 py-4 bg-gradient-to-r from-teal-600 to-cyan-600 text-white font-semibold rounded-xl hover:from-teal-700 hover:to-cyan-700 transition-all transform hover:scale-105 shadow-lg hover:shadow-xl text-center"
               >
-                Create New Retro
-              </button>
+                {{ isSignedIn ? 'Create New Retro' : 'Get Started' }}
+              </router-link>
             </div>
           </div>
 

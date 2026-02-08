@@ -6,17 +6,21 @@ export function useStripe() {
   const createCheckoutSession = useAction(api.stripe.createCheckoutSession)
   const createPortalSession = useAction(api.stripe.createPortalSession)
 
-  const checkout = async (userId: Id<"users">, tier: 'pro' | 'team') => {
+  const checkout = async (userId: Id<"users">, tier: 'pro', billingCycle: 'monthly' | 'yearly' = 'yearly') => {
     try {
       // Price IDs - these should match what you create in Stripe Dashboard
+      // Monthly: $15/month
+      // Yearly: $144/year ($12/month equivalent with 20% discount)
       const priceIds = {
-        pro: 'price_pro_monthly',
-        team: 'price_team_monthly',
+        monthly: 'price_pro_monthly',
+        yearly: 'price_pro_yearly',
       }
+
+      const priceId = priceIds[billingCycle]
 
       const result = await createCheckoutSession({
         userId,
-        priceId: priceIds[tier],
+        priceId,
         tier,
       })
 

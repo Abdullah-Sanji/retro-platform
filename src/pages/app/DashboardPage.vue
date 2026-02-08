@@ -54,11 +54,12 @@ const usagePercentage = computed(() => {
   return (usageStats.value.used / usageStats.value.limit) * 100
 })
 
-const handleUpgrade = async (tier: 'pro' | 'team') => {
+const handleUpgrade = async () => {
   if (!userData.value) return
 
   try {
-    await checkout(userData.value._id, tier)
+    // Default to yearly for 20% discount
+    await checkout(userData.value._id, 'pro', 'yearly')
   } catch (error) {
     notification.error('Failed to start checkout')
   }
@@ -152,7 +153,7 @@ const handleManageBilling = async () => {
                   </div>
                   <button
                     v-if="isFreeTier"
-                    @click="handleUpgrade('pro')"
+                    @click="handleUpgrade"
                     class="px-6 py-3 bg-gradient-to-r from-teal-600 to-cyan-600 text-white font-semibold rounded-xl hover:from-sky-600 hover:to-blue-600 transition-all"
                   >
                     Upgrade Now
@@ -235,7 +236,7 @@ const handleManageBilling = async () => {
               Get unlimited sessions, export to Word, and priority support for just $15/month.
             </p>
             <button
-              @click="handleUpgrade('pro')"
+              @click="handleUpgrade"
               class="w-full px-4 py-3 bg-white text-sky-600 font-semibold rounded-xl hover:bg-gray-50 transition-all"
             >
               Upgrade Now

@@ -12,6 +12,7 @@ const props = defineProps<{
   cards: any[];
   groups: any[];
   isFacilitator: boolean;
+  facilitatorSubscription?: string;
 }>();
 
 const updateActionItem = useMutation(api.actionItems.updateActionItem);
@@ -116,6 +117,12 @@ const confirmDelete = async () => {
 const handleGenerateAI = async () => {
   if (isGeneratingAI.value) return;
 
+  // Check if facilitator has free tier - AI is Pro feature only
+  if (props.facilitatorSubscription === 'free' || !props.facilitatorSubscription) {
+    notification.warning('AI action items are a Pro feature. Upgrade to Pro to unlock AI-powered insights!');
+    return;
+  }
+
   try {
     isGeneratingAI.value = true;
 
@@ -205,13 +212,20 @@ const statusLabels = {
           @click="handleGenerateAI"
           :disabled="isGeneratingAI || !voteResults || voteResults.length === 0"
           :class="[
-            'px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2',
+            'px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 relative',
             isGeneratingAI || !voteResults || voteResults.length === 0
               ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
               : 'bg-gradient-to-r from-teal-600 to-cyan-600 text-white hover:from-teal-700 hover:to-cyan-700 shadow-md hover:shadow-lg'
           ]"
           title="Generate action items using AI based on top voted cards/groups"
         >
+          <!-- PRO Badge for free tier users -->
+          <span
+            v-if="facilitatorSubscription === 'free' || !facilitatorSubscription"
+            class="absolute -top-2 -right-2 bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-0.5 rounded-full shadow-md"
+          >
+            PRO
+          </span>
           <svg v-if="!isGeneratingAI" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
           </svg>

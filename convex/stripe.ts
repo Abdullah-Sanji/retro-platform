@@ -9,8 +9,8 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 // Price IDs (you'll need to create these in Stripe Dashboard)
 const PRICE_IDS = {
-  pro: "price_pro_monthly", // Replace with actual Stripe Price ID
-  team: "price_team_monthly", // Replace with actual Stripe Price ID
+  monthly: "price_pro_monthly", // Replace with actual Stripe Price ID for $15/month
+  yearly: "price_pro_yearly",   // Replace with actual Stripe Price ID for $144/year ($12/month)
 };
 
 // Create Stripe checkout session
@@ -18,7 +18,7 @@ export const createCheckoutSession = action({
   args: {
     userId: v.id("users"),
     priceId: v.string(),
-    tier: v.union(v.literal("pro"), v.literal("team")),
+    tier: v.literal("pro"),
   },
   handler: async (ctx, args) => {
     const user = await ctx.runQuery(async (ctx) => {
