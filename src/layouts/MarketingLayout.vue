@@ -13,7 +13,7 @@ const route = useRoute()
         <div class="flex items-center justify-between">
           <router-link to="/" class="flex items-center gap-3 group">
             <LogoIcon size="md" class="group-hover:scale-110 transition-transform" />
-            <span class="text-2xl font-bold bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 bg-clip-text text-transparent">
+            <span class="text-2xl font-bold bg-gradient-to-r from-teal-600 via-cyan-600 to-blue-600 bg-clip-text text-transparent">
               RetroPlatform
             </span>
           </router-link>

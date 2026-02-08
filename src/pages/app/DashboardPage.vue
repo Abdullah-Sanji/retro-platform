@@ -79,20 +79,20 @@ const handleManageBilling = async () => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-sky-50 to-emerald-50">
+  <div class="min-h-screen bg-gradient-to-br from-teal-50 to-cyan-50">
     <!-- Header -->
     <header class="bg-white border-b border-gray-200 sticky top-0 z-10">
       <div class="max-w-7xl mx-auto px-6 py-4">
         <div class="flex items-center justify-between">
           <router-link to="/" class="flex items-center gap-3 group">
             <LogoIcon size="md" class="group-hover:scale-110 transition-transform" />
-            <span class="text-2xl font-bold bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 bg-clip-text text-transparent">
+            <span class="text-2xl font-bold bg-gradient-to-r from-teal-600 via-cyan-600 to-blue-600 bg-clip-text text-transparent">
               RetroPlatform
             </span>
           </router-link>
           <router-link
             to="/app/create"
-            class="px-6 py-2 bg-gradient-to-r from-sky-500 to-blue-500 text-white font-semibold rounded-xl hover:from-sky-600 hover:to-blue-600 transition-all"
+            class="px-6 py-2 bg-gradient-to-r from-teal-600 to-cyan-600 text-white font-semibold rounded-xl hover:from-sky-600 hover:to-blue-600 transition-all"
           >
             Create Session
           </router-link>
@@ -153,7 +153,7 @@ const handleManageBilling = async () => {
                   <button
                     v-if="isFreeTier"
                     @click="handleUpgrade('pro')"
-                    class="px-6 py-3 bg-gradient-to-r from-sky-500 to-blue-500 text-white font-semibold rounded-xl hover:from-sky-600 hover:to-blue-600 transition-all"
+                    class="px-6 py-3 bg-gradient-to-r from-teal-600 to-cyan-600 text-white font-semibold rounded-xl hover:from-sky-600 hover:to-blue-600 transition-all"
                   >
                     Upgrade Now
                   </button>
@@ -199,7 +199,7 @@ const handleManageBilling = async () => {
               <p class="text-gray-500 mb-4">No sessions yet</p>
               <router-link
                 to="/app/create"
-                class="inline-block px-6 py-3 bg-gradient-to-r from-sky-500 to-blue-500 text-white font-semibold rounded-xl hover:from-sky-600 hover:to-blue-600 transition-all"
+                class="inline-block px-6 py-3 bg-gradient-to-r from-teal-600 to-cyan-600 text-white font-semibold rounded-xl hover:from-sky-600 hover:to-blue-600 transition-all"
               >
                 Create Your First Session
               </router-link>
@@ -215,7 +215,7 @@ const handleManageBilling = async () => {
             <div class="space-y-3">
               <router-link
                 to="/app/create"
-                class="block w-full px-4 py-3 bg-gradient-to-r from-sky-500 to-blue-500 text-white font-semibold rounded-xl hover:from-sky-600 hover:to-blue-600 transition-all text-center"
+                class="block w-full px-4 py-3 bg-gradient-to-r from-teal-600 to-cyan-600 text-white font-semibold rounded-xl hover:from-sky-600 hover:to-blue-600 transition-all text-center"
               >
                 Create Session
               </router-link>

@@ -208,7 +208,7 @@ const statusLabels = {
             'px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2',
             isGeneratingAI || !voteResults || voteResults.length === 0
               ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-              : 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700 shadow-md hover:shadow-lg'
+              : 'bg-gradient-to-r from-teal-600 to-cyan-600 text-white hover:from-teal-700 hover:to-cyan-700 shadow-md hover:shadow-lg'
           ]"
           title="Generate action items using AI based on top voted cards/groups"
         >

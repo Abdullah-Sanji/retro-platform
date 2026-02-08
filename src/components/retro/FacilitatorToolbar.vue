@@ -25,7 +25,7 @@ const pendingPhase = ref('');
 
 const phases = [
   { value: 'collecting', label: 'Collecting', color: 'from-blue-500 to-cyan-500' },
-  { value: 'grouping', label: 'Grouping', color: 'from-purple-500 to-pink-500' },
+  { value: 'grouping', label: 'Grouping', color: 'from-teal-500 to-pink-500' },
   { value: 'voting', label: 'Voting', color: 'from-emerald-500 to-green-500' },
   { value: 'discussion', label: 'Discussion', color: 'from-orange-500 to-amber-500' },
 ];

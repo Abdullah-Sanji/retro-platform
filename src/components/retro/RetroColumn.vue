@@ -163,7 +163,7 @@ const handleCreateGroup = async () => {
         <button
           v-if="!isCreatingGroup"
           @click="isCreatingGroup = true"
-          class="w-full px-4 py-3 border-2 border-purple-300 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl hover:from-purple-100 hover:to-pink-100 transition-all duration-300 text-purple-700 font-semibold text-sm shadow-md hover:shadow-lg"
+          class="w-full px-4 py-3 border-2 border-teal-300 bg-gradient-to-r from-teal-50 to-pink-50 rounded-xl hover:from-teal-100 hover:to-pink-100 transition-all duration-300 text-teal-700 font-semibold text-sm shadow-md hover:shadow-lg"
         >
           + Create Group
         </button>
@@ -172,13 +172,13 @@ const handleCreateGroup = async () => {
           <input
             v-model="newGroupTitle"
             placeholder="Group name..."
-            class="w-full px-4 py-2.5 border-2 border-purple-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all bg-white/80 outline-none"
+            class="w-full px-4 py-2.5 border-2 border-teal-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all bg-white/80 outline-none"
             @keydown.enter="handleCreateGroup"
           />
           <div class="flex gap-2">
             <button
               @click="handleCreateGroup"
-              class="flex-1 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all text-sm font-semibold shadow-md"
+              class="flex-1 px-4 py-2 bg-gradient-to-r from-teal-600 to-pink-600 text-white rounded-xl hover:from-teal-700 hover:to-pink-700 transition-all text-sm font-semibold shadow-md"
             >
               Create
             </button>
