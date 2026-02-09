@@ -1,26 +1,14 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useUser, useClerk, SignInButton } from '@clerk/vue'
+import { useUser, SignInButton, SignOutButton } from '@clerk/vue'
 import LogoIcon from '@/components/shared/LogoIcon.vue'
 
 const route = useRoute()
 const router = useRouter()
 const { user, isSignedIn } = useUser()
-const { signOut } = useClerk()
 
 const showUserMenu = ref(false)
-
-const handleSignOut = async () => {
-  try {
-    showUserMenu.value = false
-    await signOut({ redirectUrl: '/' })
-  } catch (error) {
-    console.error('Sign out error:', error)
-    // Force redirect even if signOut fails
-    router.push('/')
-  }
-}
 </script>
 
 <template>
@@ -118,15 +106,16 @@ const handleSignOut = async () => {
                   <span class="text-sm font-medium text-gray-700">Pricing</span>
                 </router-link>
                 <hr class="my-2">
-                <button
-                  @click="handleSignOut"
-                  class="flex items-center gap-3 px-4 py-3 hover:bg-red-50 transition-colors w-full text-left"
-                >
-                  <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                  </svg>
-                  <span class="text-sm font-medium text-red-600">Sign Out</span>
-                </button>
+                <SignOutButton redirectUrl="/">
+                  <button
+                    class="flex items-center gap-3 px-4 py-3 hover:bg-red-50 transition-colors w-full text-left"
+                  >
+                    <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    <span class="text-sm font-medium text-red-600">Sign Out</span>
+                  </button>
+                </SignOutButton>
               </div>
             </div>
           </div>
