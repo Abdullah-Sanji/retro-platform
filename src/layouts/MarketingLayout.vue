@@ -1,14 +1,24 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUser, SignInButton, SignOutButton } from '@clerk/vue'
 import LogoIcon from '@/components/shared/LogoIcon.vue'
+import { useFullPermission } from '@/composables/useFullPermission'
 
 const route = useRoute()
 const router = useRouter()
 const { user, isSignedIn } = useUser()
+const { isFullPermissionMode } = useFullPermission()
 
 const showUserMenu = ref(false)
+
+// In full permission mode, "Get Started" goes to /app/create instead of /pricing
+const getStartedUrl = computed(() => {
+  if (isFullPermissionMode) {
+    return '/app/create'
+  }
+  return '/pricing'
+})
 </script>
 
 <template>
@@ -31,7 +41,7 @@ const showUserMenu = ref(false)
             <router-link to="/features" class="text-gray-700 hover:text-sky-600 font-medium transition-colors">
               Features
             </router-link>
-            <router-link to="/pricing" class="text-gray-700 hover:text-sky-600 font-medium transition-colors">
+            <router-link v-if="!isFullPermissionMode" to="/pricing" class="text-gray-700 hover:text-sky-600 font-medium transition-colors">
               Pricing
             </router-link>
 
@@ -46,7 +56,7 @@ const showUserMenu = ref(false)
                 </button>
               </SignInButton>
               <router-link
-                to="/pricing"
+                :to="getStartedUrl"
                 class="px-6 py-2 bg-gradient-to-r from-sky-500 to-blue-500 text-white font-semibold rounded-xl hover:from-sky-600 hover:to-blue-600 transition-all"
               >
                 Get Started
@@ -97,6 +107,7 @@ const showUserMenu = ref(false)
                   <span class="text-sm font-medium text-gray-700">Dashboard</span>
                 </router-link>
                 <router-link
+                  v-if="!isFullPermissionMode"
                   to="/pricing"
                   class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors"
                 >
@@ -146,13 +157,14 @@ const showUserMenu = ref(false)
             <h4 class="font-semibold mb-3">Product</h4>
             <ul class="space-y-2 text-gray-400">
               <li><router-link to="/features" class="hover:text-white">Features</router-link></li>
-              <li><router-link to="/pricing" class="hover:text-white">Pricing</router-link></li>
+              <li v-if="!isFullPermissionMode"><router-link to="/pricing" class="hover:text-white">Pricing</router-link></li>
             </ul>
           </div>
           <div>
             <h4 class="font-semibold mb-3">Get Started</h4>
             <div v-if="!isSignedIn" class="space-y-3">
               <router-link
+                v-if="!isFullPermissionMode"
                 to="/pricing"
                 class="block px-6 py-2 bg-sky-600 hover:bg-sky-700 rounded-lg transition-colors text-center"
               >

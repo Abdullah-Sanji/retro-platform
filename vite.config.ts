@@ -17,13 +17,12 @@ export default defineConfig({
 
   // SSG Configuration for vite-ssg
   ssgOptions: {
-    // Routes to prerender (marketing only)
-    includedRoutes(paths: string[]) {
-      // Only prerender marketing pages, not app pages or dashboard (requires auth)
-      return paths.filter(path => !path.startsWith('/app') && !path.startsWith('/dashboard'))
+    // Disable SSG completely due to Clerk authentication throughout the app
+    includedRoutes() {
+      return []
     },
     formatting: 'minify',
-    criticalCSS: true,
+    criticalCSS: false,
   },
 
   build: {

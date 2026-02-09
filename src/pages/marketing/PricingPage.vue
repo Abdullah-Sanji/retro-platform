@@ -7,6 +7,7 @@ import { useNotification } from '@/composables/useNotification'
 import { useQuery, useMutation } from '@/composables/useConvex'
 import { api } from '../../../convex/_generated/api'
 import { useSeo } from '@/composables/useSeo'
+import { useFullPermission } from '@/composables/useFullPermission'
 
 useSeo({
   title: 'Pricing - Simple, Transparent Plans',
@@ -19,6 +20,12 @@ const { user, isSignedIn } = useUser()
 const { checkout } = useStripe()
 const notification = useNotification()
 const syncClerkUser = useMutation(api.users.syncClerkUser)
+const { isFullPermissionMode } = useFullPermission()
+
+// Redirect to create session page if full permission mode is enabled
+if (isFullPermissionMode) {
+  router.replace('/app/create')
+}
 
 // Billing cycle toggle (yearly by default for 20% discount)
 const isYearly = ref(true)

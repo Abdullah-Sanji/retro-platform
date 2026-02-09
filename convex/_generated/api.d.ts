@@ -15,6 +15,7 @@ import type * as groups from "../groups.js";
 import type * as sessions from "../sessions.js";
 import type * as stripe from "../stripe.js";
 import type * as users from "../users.js";
+import type * as utils from "../utils.js";
 import type * as votes from "../votes.js";
 
 import type {
@@ -31,6 +32,7 @@ declare const fullApi: ApiFromModules<{
   sessions: typeof sessions;
   stripe: typeof stripe;
   users: typeof users;
+  utils: typeof utils;
   votes: typeof votes;
 }>;
 

@@ -4,6 +4,7 @@ import { useUser } from '@clerk/vue';
 import { useMutation, useQuery } from '../../composables/useConvex';
 import { useNotification } from '../../composables/useNotification';
 import { api } from '../../../convex/_generated/api';
+import { useFullPermission } from '../../composables/useFullPermission';
 
 const emit = defineEmits<{
   sessionCreated: [{ sessionId: string; shareLink: string; userId: string }];
@@ -13,6 +14,7 @@ const { user } = useUser();
 const createSession = useMutation(api.sessions.createSession);
 const syncClerkUser = useMutation(api.users.syncClerkUser);
 const notification = useNotification();
+const { isFullPermissionMode } = useFullPermission();
 
 // Get user's subscription status
 const userData = useQuery(
@@ -20,9 +22,12 @@ const userData = useQuery(
   computed(() => user.value?.id ? { clerkId: user.value.id } : 'skip')
 );
 
-const userSubscription = computed(() => userData.value?.subscriptionStatus || 'free');
-const isFreeTier = computed(() => userSubscription.value === 'free');
-const isProTier = computed(() => userSubscription.value === 'pro');
+const userSubscription = computed(() => {
+  if (isFullPermissionMode) return 'pro';
+  return userData.value?.subscriptionStatus || 'free';
+});
+const isFreeTier = computed(() => !isFullPermissionMode && userSubscription.value === 'free');
+const isProTier = computed(() => isFullPermissionMode || userSubscription.value === 'pro');
 
 // Pre-fill name from Clerk user
 onMounted(() => {

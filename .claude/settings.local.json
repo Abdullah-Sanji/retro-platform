@@ -10,7 +10,8 @@
       "Bash(npx convex env set:*)",
       "Bash(npx convex:*)",
       "mcp__ide__getDiagnostics",
-      "Bash(pkill:*)"
+      "Bash(pkill:*)",
+      "Bash(npx tsc:*)"
     ]
   }
 }

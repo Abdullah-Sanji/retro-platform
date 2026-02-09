@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { getEffectiveSubscription } from "./utils";
 
 // Cast a vote on a card or group
 export const castVote = mutation({
@@ -42,9 +43,9 @@ export const castVote = mutation({
     // Check if session has vote limits (Pro tier has unlimited votes)
     const facilitator = await ctx.db.get(session.facilitatorId);
     if (facilitator && !facilitator.isAnonymous) {
-      const subscriptionStatus = facilitator.subscriptionStatus || "free";
+      const subscriptionStatus = getEffectiveSubscription(facilitator.subscriptionStatus);
 
-      // Pro tier has unlimited votes, free tier respects votesPerUser limit
+      // Pro tier or full permission mode has unlimited votes, free tier respects votesPerUser limit
       if (subscriptionStatus === "free" && userVotes.length >= session.votesPerUser) {
         throw new Error(`Maximum ${session.votesPerUser} votes allowed. Upgrade to Pro for unlimited votes!`);
       }
@@ -127,7 +128,7 @@ export const getRemainingVotes = query({
     let isUnlimited = false;
 
     if (facilitator && !facilitator.isAnonymous) {
-      const subscriptionStatus = facilitator.subscriptionStatus || "free";
+      const subscriptionStatus = getEffectiveSubscription(facilitator.subscriptionStatus);
       isUnlimited = subscriptionStatus === "pro";
     }
 

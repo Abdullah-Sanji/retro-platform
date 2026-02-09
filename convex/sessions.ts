@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { nanoid } from "nanoid";
+import { getEffectiveSubscription, isFullPermissionMode } from "./utils";
 
 // Usage limits by subscription tier
 const USAGE_LIMITS = {
@@ -51,7 +52,7 @@ export const createSession = mutation({
     const facilitator = await ctx.db.get(args.facilitatorId);
     if (!facilitator) throw new Error("Facilitator not found");
 
-    if (!facilitator.isAnonymous) {
+    if (!facilitator.isAnonymous && !isFullPermissionMode()) {
       const subscriptionStatus = facilitator.subscriptionStatus || "free";
       const limit = USAGE_LIMITS[subscriptionStatus];
       const used = facilitator.sessionsCreatedThisMonth || 0;
@@ -98,7 +99,7 @@ export const createSession = mutation({
             title,
             color: `bg-${["blue", "green", "purple", "orange"][i % 4]}-100`,
           }))
-        : TEMPLATES[args.templateType];
+        : TEMPLATES[args.templateType as keyof typeof TEMPLATES];
 
     for (let i = 0; i < columns.length; i++) {
       await ctx.db.insert("columns", {
@@ -194,7 +195,7 @@ export const getSessionDetails = query({
 
     // Get facilitator subscription info
     const facilitator = await ctx.db.get(session.facilitatorId);
-    const facilitatorSubscription = facilitator?.subscriptionStatus || "free";
+    const facilitatorSubscription = getEffectiveSubscription(facilitator?.subscriptionStatus);
 
     return {
       session,
@@ -360,6 +361,15 @@ export const canCreateSession = query({
       return { canCreate: false, reason: "Please sign in to create sessions" };
     }
 
+    // If full permission mode, allow unlimited sessions
+    if (isFullPermissionMode()) {
+      return {
+        canCreate: true,
+        limit: Infinity,
+        used: 0,
+      };
+    }
+
     const subscriptionStatus = user.subscriptionStatus || "free";
     const limit = USAGE_LIMITS[subscriptionStatus];
     const used = user.sessionsCreatedThisMonth || 0;
@@ -390,8 +400,8 @@ export const getUserUsage = query({
     const user = await ctx.db.get(args.userId);
     if (!user) return null;
 
-    const subscriptionStatus = user.subscriptionStatus || "free";
-    const limit = USAGE_LIMITS[subscriptionStatus];
+    const subscriptionStatus = getEffectiveSubscription(user.subscriptionStatus);
+    const limit = USAGE_LIMITS[subscriptionStatus as keyof typeof USAGE_LIMITS] || Infinity;
     const used = user.sessionsCreatedThisMonth || 0;
 
     return {
@@ -453,9 +463,9 @@ export const canJoinSession = query({
       return { canJoin: true };
     }
 
-    const subscriptionStatus = facilitator.subscriptionStatus || "free";
+    const subscriptionStatus = getEffectiveSubscription(facilitator.subscriptionStatus);
 
-    // Pro tier has no participant limits
+    // Pro tier or full permission mode has no participant limits
     if (subscriptionStatus === "pro") {
       return { canJoin: true };
     }

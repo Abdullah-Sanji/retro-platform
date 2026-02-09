@@ -8,11 +8,13 @@ import { useStripe } from '@/composables/useStripe'
 import LogoIcon from '@/components/shared/LogoIcon.vue'
 import { api } from '../../../convex/_generated/api'
 import type { Id } from '../../../convex/_generated/dataModel'
+import { useFullPermission } from '@/composables/useFullPermission'
 
 const router = useRouter()
 const { user, isSignedIn } = useUser()
 const notification = useNotification()
 const { checkout, manageBilling } = useStripe()
+const { isFullPermissionMode } = useFullPermission()
 
 // Redirect if not signed in
 onMounted(() => {
@@ -47,8 +49,11 @@ const userSessions = useQuery(
   computed(() => userData.value ? { userId: userData.value._id } : 'skip')
 )
 
-const subscriptionStatus = computed(() => userData.value?.subscriptionStatus || 'free')
-const isFreeTier = computed(() => subscriptionStatus.value === 'free')
+const subscriptionStatus = computed(() => {
+  if (isFullPermissionMode) return 'pro'
+  return userData.value?.subscriptionStatus || 'free'
+})
+const isFreeTier = computed(() => !isFullPermissionMode && subscriptionStatus.value === 'free')
 const usagePercentage = computed(() => {
   if (!usageStats.value || usageStats.value.limit === Infinity) return 0
   return (usageStats.value.used / usageStats.value.limit) * 100

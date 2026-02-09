@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation } from "./_generated/server";
+import { getEffectiveSubscription } from "./utils";
 
 // Create a new card
 export const createCard = mutation({
@@ -21,9 +22,9 @@ export const createCard = mutation({
     // Check participant limits for free tier
     const facilitator = await ctx.db.get(session.facilitatorId);
     if (facilitator && !facilitator.isAnonymous) {
-      const subscriptionStatus = facilitator.subscriptionStatus || "free";
+      const subscriptionStatus = getEffectiveSubscription(facilitator.subscriptionStatus);
 
-      // Free tier has 5 participant limit
+      // Free tier has 5 participant limit (Pro tier or full permission mode has unlimited)
       if (subscriptionStatus === "free") {
         const cards = await ctx.db
           .query("cards")

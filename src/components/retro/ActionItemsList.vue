@@ -4,6 +4,7 @@ import { useMutation, useQuery } from '../../composables/useConvex';
 import { useNotification } from '../../composables/useNotification';
 import { generateAIActionItems } from '../../composables/useAIActionItems';
 import { api } from '../../../convex/_generated/api';
+import { useFullPermission } from '../../composables/useFullPermission';
 
 const props = defineProps<{
   sessionId: string;
@@ -20,6 +21,7 @@ const deleteActionItem = useMutation(api.actionItems.deleteActionItem);
 const createActionItem = useMutation(api.actionItems.createActionItem);
 const bulkCreateActionItems = useMutation(api.actionItems.bulkCreateActionItems);
 const notification = useNotification();
+const { isFullPermissionMode } = useFullPermission();
 
 const isGeneratingAI = ref(false);
 
@@ -117,8 +119,8 @@ const confirmDelete = async () => {
 const handleGenerateAI = async () => {
   if (isGeneratingAI.value) return;
 
-  // Check if facilitator has free tier - AI is Pro feature only
-  if (props.facilitatorSubscription === 'free' || !props.facilitatorSubscription) {
+  // Check if facilitator has free tier - AI is Pro feature only (unless full permission mode)
+  if (!isFullPermissionMode && (props.facilitatorSubscription === 'free' || !props.facilitatorSubscription)) {
     notification.warning('AI action items are a Pro feature. Upgrade to Pro to unlock AI-powered insights!');
     return;
   }
@@ -219,9 +221,9 @@ const statusLabels = {
           ]"
           title="Generate action items using AI based on top voted cards/groups"
         >
-          <!-- PRO Badge for free tier users -->
+          <!-- PRO Badge for free tier users (hide in full permission mode) -->
           <span
-            v-if="facilitatorSubscription === 'free' || !facilitatorSubscription"
+            v-if="!isFullPermissionMode && (facilitatorSubscription === 'free' || !facilitatorSubscription)"
             class="absolute -top-2 -right-2 bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-0.5 rounded-full shadow-md"
           >
             PRO
