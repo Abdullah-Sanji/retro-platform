@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useMutation } from '../../composables/useConvex';
 import { useNotification } from '../../composables/useNotification';
 import { api } from '../../../convex/_generated/api';
@@ -30,8 +30,13 @@ const phases = [
   { value: 'discussion', label: 'Discussion', color: 'from-orange-500 to-amber-500' },
 ];
 
+const isSessionActive = computed(() => {
+  return props.sessionData?.session?.isActive !== false && props.currentPhase !== 'completed';
+});
+
 const handlePhaseChange = (newPhase: string) => {
   if (newPhase === props.currentPhase) return;
+  if (!isSessionActive.value) return;
   pendingPhase.value = newPhase;
   showPhaseConfirm.value = true;
 };
@@ -81,8 +86,12 @@ const confirmEndSession = async () => {
         v-for="phase in phases"
         :key="phase.value"
         @click="handlePhaseChange(phase.value)"
+        :disabled="!isSessionActive"
         :class="[
-          'px-4 py-2 rounded-xl text-sm font-semibold transition-all transform hover:scale-105 shadow-md',
+          'px-4 py-2 rounded-xl text-sm font-semibold transition-all shadow-md',
+          !isSessionActive
+            ? 'opacity-50 cursor-not-allowed'
+            : 'transform hover:scale-105',
           currentPhase === phase.value
             ? `bg-gradient-to-r ${phase.color} text-white shadow-lg`
             : 'glass text-gray-700 hover:shadow-lg'
@@ -97,11 +106,18 @@ const confirmEndSession = async () => {
 
     <!-- End Session -->
     <button
+      v-if="isSessionActive"
       @click="handleEndSession"
       class="px-5 py-2 bg-gradient-to-r from-red-500 to-rose-500 text-white rounded-xl text-sm font-semibold hover:from-red-600 hover:to-rose-600 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
     >
       End Session
     </button>
+    <div
+      v-else
+      class="px-5 py-2 bg-gray-400 text-white rounded-xl text-sm font-semibold shadow-lg"
+    >
+      Session Ended
+    </div>
 
     <!-- Facilitator Badge -->
     <div class="px-4 py-2 bg-gradient-to-r from-amber-400 to-yellow-400 text-amber-900 rounded-xl text-xs font-bold shadow-lg flex items-center gap-2">

@@ -70,15 +70,22 @@ export const updateActionItem = mutation({
     const session = await ctx.db.get(actionItem.sessionId);
     if (!session) throw new Error("Session not found");
 
-    // Verify user is facilitator or owner
-    const canEdit =
+    const isFacilitatorOrOwner =
       session.facilitatorId === args.userId ||
       actionItem.ownerId === args.userId;
 
-    if (!canEdit) {
-      throw new Error("Only facilitator or owner can update action item");
+    // Check if user is trying to update fields other than status
+    const isUpdatingOtherFields =
+      args.title !== undefined ||
+      args.ownerId !== undefined ||
+      args.dueDate !== undefined;
+
+    // Only facilitator or owner can update fields other than status
+    if (isUpdatingOtherFields && !isFacilitatorOrOwner) {
+      throw new Error("Only facilitator or owner can update action item details");
     }
 
+    // Anyone can update just the status
     const updates: any = { updatedAt: Date.now() };
     if (args.title !== undefined) updates.title = args.title;
     if (args.ownerId !== undefined) updates.ownerId = args.ownerId;

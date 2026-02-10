@@ -52,24 +52,28 @@ export const createSession = mutation({
     const facilitator = await ctx.db.get(args.facilitatorId);
     if (!facilitator) throw new Error("Facilitator not found");
 
-    if (!facilitator.isAnonymous && !isFullPermissionMode()) {
-      const subscriptionStatus = facilitator.subscriptionStatus || "free";
-      const limit = USAGE_LIMITS[subscriptionStatus];
-      const used = facilitator.sessionsCreatedThisMonth || 0;
+    if (!facilitator.isAnonymous) {
+      const inFullPermissionMode = isFullPermissionMode();
 
-      if (used >= limit) {
-        throw new Error(`Monthly session limit reached (${limit} session). Please upgrade to Pro for unlimited sessions.`);
+      if (!inFullPermissionMode) {
+        const subscriptionStatus = facilitator.subscriptionStatus || "free";
+        const limit = USAGE_LIMITS[subscriptionStatus];
+        const used = facilitator.sessionsCreatedThisMonth || 0;
+
+        if (used >= limit) {
+          throw new Error(`Monthly session limit reached (${limit} session). Please upgrade to Pro for unlimited sessions.`);
+        }
+
+        // Free tier can only use mad_sad_glad template
+        if (subscriptionStatus === "free" && args.templateType !== "mad_sad_glad") {
+          throw new Error("Free tier is limited to Mad, Sad & Glad template. Upgrade to Pro for all templates.");
+        }
+
+        // Increment session count
+        await ctx.db.patch(args.facilitatorId, {
+          sessionsCreatedThisMonth: used + 1,
+        });
       }
-
-      // Free tier can only use mad_sad_glad template
-      if (subscriptionStatus === "free" && args.templateType !== "mad_sad_glad") {
-        throw new Error("Free tier is limited to Mad, Sad & Glad template. Upgrade to Pro for all templates.");
-      }
-
-      // Increment session count
-      await ctx.db.patch(args.facilitatorId, {
-        sessionsCreatedThisMonth: used + 1,
-      });
     }
 
     // Don't auto-start timer - facilitator will start it manually
