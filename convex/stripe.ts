@@ -2,10 +2,16 @@ import { v } from "convex/values";
 import { action } from "./_generated/server";
 import Stripe from "stripe";
 
-// Initialize Stripe with secret key
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2024-12-18.acacia",
-});
+// Lazy initialize Stripe to avoid errors during module loading
+function getStripe() {
+  const stripeKey = process.env.STRIPE_SECRET_KEY;
+  if (!stripeKey) {
+    throw new Error("STRIPE_SECRET_KEY not configured");
+  }
+  return new Stripe(stripeKey, {
+    apiVersion: "2024-12-18.acacia",
+  });
+}
 
 // Price IDs (you'll need to create these in Stripe Dashboard)
 const PRICE_IDS = {
@@ -30,6 +36,7 @@ export const createCheckoutSession = action({
     }
 
     // Create Stripe checkout session
+    const stripe = getStripe();
     const session = await stripe.checkout.sessions.create({
       customer_email: user.email,
       line_items: [
@@ -57,6 +64,7 @@ export const createPortalSession = action({
     customerId: v.string(),
   },
   handler: async (ctx, args) => {
+    const stripe = getStripe();
     const session = await stripe.billingPortal.sessions.create({
       customer: args.customerId,
       return_url: `${process.env.SITE_URL || "http://localhost:5173"}/dashboard`,
@@ -76,6 +84,7 @@ export const handleWebhook = action({
     let event: Stripe.Event;
 
     try {
+      const stripe = getStripe();
       event = stripe.webhooks.constructEvent(
         args.payload,
         args.signature,
