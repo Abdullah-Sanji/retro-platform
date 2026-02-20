@@ -1,28 +1,24 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, onMounted, watch, ref } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { useUser } from '@clerk/vue'
-import { useQuery, useMutation } from '@/composables/useConvex'
+import { useQuery, useMutation, useAction } from '@/composables/useConvex'
 import { useNotification } from '@/composables/useNotification'
-import { useStripe } from '@/composables/useStripe'
+import { usePayPal } from '@/composables/usePayPal'
 import LogoIcon from '@/components/shared/LogoIcon.vue'
 import { api } from '../../../convex/_generated/api'
 import type { Id } from '../../../convex/_generated/dataModel'
 import { useFullPermission } from '@/composables/useFullPermission'
 
 const router = useRouter()
+const route = useRoute()
 const { user, isSignedIn } = useUser()
 const notification = useNotification()
-const { checkout, manageBilling } = useStripe()
+const { checkout, manageBilling, cancelUserSubscription } = usePayPal()
+const showCancelConfirm = ref(false)
+const isCancelling = ref(false)
 const { isFullPermissionMode } = useFullPermission()
-
-// Redirect if not signed in
-onMounted(() => {
-  if (!isSignedIn.value) {
-    notification.warning('Please sign in to view dashboard')
-    router.push('/')
-  }
-})
+const activateSubscription = useAction(api.paypal.activateSubscription)
 
 // Sync user and get their Convex ID
 const syncClerkUser = useMutation(api.users.syncClerkUser)
@@ -48,6 +44,43 @@ const userSessions = useQuery(
   api.sessions.getUserSessions,
   computed(() => userData.value ? { userId: userData.value._id } : 'skip')
 )
+
+// Wait for userData to be non-null, then resolve
+function waitForUser(): Promise<any> {
+  return new Promise((resolve) => {
+    if (userData.value) {
+      resolve(userData.value)
+      return
+    }
+    const stop = watch(() => userData.value, (val) => {
+      if (val) {
+        stop()
+        resolve(val)
+      }
+    })
+  })
+}
+
+onMounted(async () => {
+  if (isSignedIn.value === false) {
+    notification.warning('Please sign in to view dashboard')
+    router.push('/')
+    return
+  }
+  // Handle PayPal return redirect
+  const subscriptionId = route.query.subscription_id as string
+  if (!subscriptionId) return
+
+  try {
+    const user = await waitForUser()
+    await activateSubscription({ subscriptionId, userId: user._id })
+    notification.success('Welcome to Pro! Your subscription is now active.')
+    router.replace('/dashboard')
+  } catch (error: any) {
+    console.error('Failed to activate subscription:', error)
+    notification.error(error?.message || 'Could not activate subscription. Please contact support.')
+  }
+})
 
 const subscriptionStatus = computed(() => {
   if (isFullPermissionMode) return 'pro'
@@ -80,6 +113,24 @@ const handleManageBilling = async () => {
     await manageBilling(userData.value.customerId)
   } catch (error) {
     notification.error('Failed to open billing portal')
+  }
+}
+
+const handleCancelSubscription = async () => {
+  if (!userData.value?.subscriptionId) {
+    notification.error('No active subscription found')
+    return
+  }
+
+  isCancelling.value = true
+  try {
+    await cancelUserSubscription(userData.value._id, userData.value.subscriptionId)
+    showCancelConfirm.value = false
+    notification.success('Subscription cancelled. You have been downgraded to the Free plan.')
+  } catch (error) {
+    notification.error('Failed to cancel subscription. Please try again.')
+  } finally {
+    isCancelling.value = false
   }
 }
 </script>
@@ -165,10 +216,10 @@ const handleManageBilling = async () => {
                   </button>
                   <button
                     v-else
-                    @click="handleManageBilling"
-                    class="px-6 py-3 bg-gray-100 text-gray-800 font-semibold rounded-xl hover:bg-gray-200 transition-all"
+                    @click="showCancelConfirm = true"
+                    class="px-6 py-3 bg-gray-100 text-red-600 font-semibold rounded-xl hover:bg-red-50 transition-all"
                   >
-                    Manage Billing
+                    Cancel Plan
                   </button>
                 </div>
               </div>
@@ -248,6 +299,35 @@ const handleManageBilling = async () => {
             </button>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cancel Subscription Confirmation Modal -->
+  <div
+    v-if="showCancelConfirm"
+    class="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+    @click.self="showCancelConfirm = false"
+  >
+    <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4">
+      <h3 class="text-xl font-bold text-gray-800 mb-2">Cancel Subscription?</h3>
+      <p class="text-gray-600 mb-6">
+        You'll be downgraded to the Free plan immediately. You'll lose access to unlimited sessions, all templates, and other Pro features.
+      </p>
+      <div class="flex gap-3">
+        <button
+          @click="showCancelConfirm = false"
+          class="flex-1 px-4 py-3 bg-gray-100 text-gray-800 font-semibold rounded-xl hover:bg-gray-200 transition-all"
+        >
+          Keep Pro
+        </button>
+        <button
+          @click="handleCancelSubscription"
+          :disabled="isCancelling"
+          class="flex-1 px-4 py-3 bg-red-500 text-white font-semibold rounded-xl hover:bg-red-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {{ isCancelling ? 'Cancelling...' : 'Yes, Cancel' }}
+        </button>
       </div>
     </div>
   </div>

@@ -1,4 +1,9 @@
 <script setup lang="ts">
+import { computed } from 'vue'
+import { useUser } from '@clerk/vue'
+import { useQuery } from '@/composables/useConvex'
+import { useFullPermission } from '@/composables/useFullPermission'
+import { api } from '../../../convex/_generated/api'
 import { useSeo } from '@/composables/useSeo'
 
 useSeo({
@@ -45,6 +50,18 @@ const features = [
     gradient: 'from-teal-400 to-cyan-400',
   },
 ]
+
+const { user } = useUser()
+const { isFullPermissionMode } = useFullPermission()
+
+const userData = useQuery(
+  api.users.getCurrentUser,
+  computed(() => user.value?.id ? { clerkId: user.value.id } : 'skip')
+)
+
+const isPro = computed(() =>
+  isFullPermissionMode || userData.value?.subscriptionStatus === 'pro'
+)
 
 const comparisons = [
   { feature: 'Real-time Collaboration', us: true, miro: true, mural: true },
@@ -142,8 +159,8 @@ const comparisons = [
         </div>
       </div>
 
-      <!-- CTA Section -->
-      <div class="text-center mt-20">
+      <!-- CTA Section (hidden for Pro users) -->
+      <div v-if="!isPro" class="text-center mt-20">
         <h2 class="text-4xl font-bold text-gray-800 mb-6">Ready to get started?</h2>
         <p class="text-xl text-gray-600 mb-8">Create your first retrospective in under 30 seconds</p>
         <router-link

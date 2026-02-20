@@ -55,6 +55,30 @@ export const getCurrentUser = query({
   },
 });
 
+// Get user by ID (for PayPal integration)
+export const getUserById = query({
+  args: {
+    userId: v.id("users"),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.userId);
+  },
+});
+
+// Update subscription status (called by PayPal actions)
+export const updateSubscriptionStatus = mutation({
+  args: {
+    userId: v.id("users"),
+    subscriptionStatus: v.string(),
+    subscriptionId: v.optional(v.string()),
+    customerId: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const { userId, ...updates } = args;
+    await ctx.db.patch(userId, updates);
+  },
+});
+
 // Create a new user (anonymous or authenticated)
 export const createUser = mutation({
   args: {

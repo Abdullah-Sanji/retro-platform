@@ -2,7 +2,7 @@
 import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUser, SignUpButton } from '@clerk/vue'
-import { useStripe } from '@/composables/useStripe'
+import { usePayPal } from '@/composables/usePayPal'
 import { useNotification } from '@/composables/useNotification'
 import { useQuery, useMutation } from '@/composables/useConvex'
 import { api } from '../../../convex/_generated/api'
@@ -17,7 +17,7 @@ useSeo({
 
 const router = useRouter()
 const { user, isSignedIn } = useUser()
-const { checkout } = useStripe()
+const { checkout } = usePayPal()
 const notification = useNotification()
 const syncClerkUser = useMutation(api.users.syncClerkUser)
 const { isFullPermissionMode } = useFullPermission()
@@ -26,6 +26,14 @@ const { isFullPermissionMode } = useFullPermission()
 if (isFullPermissionMode) {
   router.replace('/app/create')
 }
+
+// Get user's subscription status
+const userData = useQuery(
+  api.users.getCurrentUser,
+  computed(() => user.value?.id ? { clerkId: user.value.id } : 'skip')
+)
+
+const isPro = computed(() => userData.value?.subscriptionStatus === 'pro')
 
 // Billing cycle toggle (yearly by default for 20% discount)
 const isYearly = ref(true)
@@ -40,12 +48,6 @@ const proYearlyPrice = computed(() => {
 const proMonthlyEquivalent = computed(() => {
   return Math.round(proYearlyPrice.value / 12)
 })
-
-// Get user's Convex data
-const userData = useQuery(
-  api.users.getCurrentUser,
-  computed(() => user.value?.id ? { clerkId: user.value.id } : 'skip')
-)
 
 // Auto-sync Clerk user to Convex when signed in
 watch(
@@ -93,7 +95,7 @@ const handleUpgradeToPro = async () => {
   }
 
   try {
-    notification.info('Redirecting to checkout...')
+    notification.info('Redirecting to PayPal...')
     // Pass billing cycle to checkout
     await checkout(userData.value._id, 'pro', isYearly.value ? 'yearly' : 'monthly')
   } catch (error: any) {
@@ -115,8 +117,8 @@ const handleUpgradeToPro = async () => {
         Start free, upgrade as you grow
       </p>
 
-      <!-- Billing Cycle Toggle -->
-      <div class="flex items-center justify-center gap-4 mb-16">
+      <!-- Billing Cycle Toggle (hidden for Pro users) -->
+      <div v-if="!isPro" class="flex items-center justify-center gap-4 mb-16">
         <span :class="['text-lg font-semibold transition-colors', !isYearly ? 'text-gray-900' : 'text-gray-500']">
           Monthly
         </span>
@@ -159,8 +161,16 @@ const handleUpgradeToPro = async () => {
                 <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Anonymous mode</li>
                 <li class="flex items-center"><span class="text-gray-400 mr-2">✗</span> <span class="text-gray-400">AI action items</span></li>
               </ul>
+              <button
+                v-if="isPro"
+                disabled
+                class="block w-full px-6 py-3 bg-gray-100 text-gray-400 font-semibold rounded-xl cursor-not-allowed"
+                title="Cancel your Pro plan from the dashboard to downgrade"
+              >
+                Downgrade (cancel from dashboard)
+              </button>
               <SignUpButton
-                v-if="!isSignedIn"
+                v-else-if="!isSignedIn"
                 mode="modal"
                 afterSignUpUrl="/pricing"
                 afterSignInUrl="/pricing"
@@ -178,7 +188,16 @@ const handleUpgradeToPro = async () => {
               </button>
             </div>
             <div class="text-center p-8 bg-gradient-to-br from-sky-50 to-blue-50 rounded-2xl border-2 border-sky-400 shadow-xl hover:shadow-2xl transition-all relative transform scale-105">
-              <div class="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-sky-600 text-white px-4 py-1 rounded-full text-xs font-bold">
+              <div
+                v-if="isPro"
+                class="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-emerald-500 text-white px-4 py-1 rounded-full text-xs font-bold"
+              >
+                CURRENT PLAN
+              </div>
+              <div
+                v-else
+                class="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-sky-600 text-white px-4 py-1 rounded-full text-xs font-bold"
+              >
                 POPULAR
               </div>
               <h4 class="text-2xl font-bold text-gray-800 mb-2">Pro</h4>
@@ -203,8 +222,15 @@ const handleUpgradeToPro = async () => {
                 <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Everything in Free</li>
                 <li class="flex items-center"><span class="text-green-500 mr-2">✓</span> Priority support</li>
               </ul>
+              <button
+                v-if="isPro"
+                disabled
+                class="block w-full px-6 py-3 bg-emerald-500 text-white font-semibold rounded-xl cursor-not-allowed opacity-80"
+              >
+                ✓ Current Plan
+              </button>
               <SignUpButton
-                v-if="!isSignedIn"
+                v-else-if="!isSignedIn"
                 mode="modal"
                 afterSignUpUrl="/pricing"
                 afterSignInUrl="/pricing"

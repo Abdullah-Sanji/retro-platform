@@ -11,7 +11,8 @@
       "Bash(npx convex:*)",
       "mcp__ide__getDiagnostics",
       "Bash(pkill:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "WebSearch"
     ]
   }
 }
