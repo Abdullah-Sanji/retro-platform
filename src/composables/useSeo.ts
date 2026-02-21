@@ -25,6 +25,7 @@ export function useSeo(options: SeoOptions) {
     meta: [
       { name: 'description', content: options.description },
       { name: 'keywords', content: options.keywords || '' },
+      { name: 'google-site-verification', content: 'yfpZOep63Hntv4hj1cf0_WxT7d3B5a_tI0-zwohR9Nc' },
     ],
   })
 
