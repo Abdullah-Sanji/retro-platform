@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { useUser, SignUpButton } from '@clerk/vue'
+import { SignUpButton } from '@clerk/vue'
+import { useSafeUser } from '@/composables/useSafeUser'
+import ClientOnly from '@/components/shared/ClientOnly.vue'
 import { usePayPal } from '@/composables/usePayPal'
 import { useNotification } from '@/composables/useNotification'
 import { useQuery, useMutation } from '@/composables/useConvex'
@@ -16,7 +18,7 @@ useSeo({
 })
 
 const router = useRouter()
-const { user, isSignedIn } = useUser()
+const { user, isSignedIn } = useSafeUser()
 const { checkout } = usePayPal()
 const notification = useNotification()
 const syncClerkUser = useMutation(api.users.syncClerkUser)
@@ -169,16 +171,17 @@ const handleUpgradeToPro = async () => {
               >
                 Downgrade (cancel from dashboard)
               </button>
-              <SignUpButton
-                v-else-if="!isSignedIn"
-                mode="modal"
-                afterSignUpUrl="/pricing"
-                afterSignInUrl="/pricing"
-              >
-                <button class="block w-full px-6 py-3 bg-gray-100 text-gray-800 font-semibold rounded-xl hover:bg-gray-200 transition-all">
-                  Choose Free Plan
-                </button>
-              </SignUpButton>
+              <ClientOnly v-else-if="!isSignedIn">
+                <SignUpButton
+                  mode="modal"
+                  afterSignUpUrl="/pricing"
+                  afterSignInUrl="/pricing"
+                >
+                  <button class="block w-full px-6 py-3 bg-gray-100 text-gray-800 font-semibold rounded-xl hover:bg-gray-200 transition-all">
+                    Choose Free Plan
+                  </button>
+                </SignUpButton>
+              </ClientOnly>
               <button
                 v-else
                 @click="handleFreePlan"
@@ -229,16 +232,17 @@ const handleUpgradeToPro = async () => {
               >
                 ✓ Current Plan
               </button>
-              <SignUpButton
-                v-else-if="!isSignedIn"
-                mode="modal"
-                afterSignUpUrl="/pricing"
-                afterSignInUrl="/pricing"
-              >
-                <button class="block w-full px-6 py-3 bg-gradient-to-r from-sky-500 to-blue-500 text-white font-semibold rounded-xl hover:from-sky-600 hover:to-blue-600 transition-all">
-                  Choose Pro Plan
-                </button>
-              </SignUpButton>
+              <ClientOnly v-else-if="!isSignedIn">
+                <SignUpButton
+                  mode="modal"
+                  afterSignUpUrl="/pricing"
+                  afterSignInUrl="/pricing"
+                >
+                  <button class="block w-full px-6 py-3 bg-gradient-to-r from-sky-500 to-blue-500 text-white font-semibold rounded-xl hover:from-sky-600 hover:to-blue-600 transition-all">
+                    Choose Pro Plan
+                  </button>
+                </SignUpButton>
+              </ClientOnly>
               <button
                 v-else
                 @click="handleUpgradeToPro"

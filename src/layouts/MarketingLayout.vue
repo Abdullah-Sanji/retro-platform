@@ -1,13 +1,15 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useUser, SignInButton, SignOutButton } from '@clerk/vue'
+import { SignInButton, SignOutButton } from '@clerk/vue'
 import LogoIcon from '@/components/shared/LogoIcon.vue'
+import ClientOnly from '@/components/shared/ClientOnly.vue'
 import { useFullPermission } from '@/composables/useFullPermission'
+import { useSafeUser } from '@/composables/useSafeUser'
 
 const route = useRoute()
 const router = useRouter()
-const { user, isSignedIn } = useUser()
+const { user, isSignedIn } = useSafeUser()
 const { isFullPermissionMode } = useFullPermission()
 
 const showUserMenu = ref(false)
@@ -47,14 +49,16 @@ const getStartedUrl = computed(() => {
 
             <!-- CTA Buttons -->
             <div v-if="!isSignedIn" class="flex items-center gap-4">
-              <SignInButton
-                mode="modal"
-                afterSignInUrl="/app/create"
-              >
-                <button class="px-6 py-2 border-2 border-sky-500 text-sky-600 font-semibold rounded-xl hover:bg-sky-50 transition-all">
-                  Sign In
-                </button>
-              </SignInButton>
+              <ClientOnly>
+                <SignInButton
+                  mode="modal"
+                  afterSignInUrl="/app/create"
+                >
+                  <button class="px-6 py-2 border-2 border-sky-500 text-sky-600 font-semibold rounded-xl hover:bg-sky-50 transition-all">
+                    Sign In
+                  </button>
+                </SignInButton>
+              </ClientOnly>
               <router-link
                 :to="getStartedUrl"
                 class="px-6 py-2 bg-gradient-to-r from-sky-500 to-blue-500 text-white font-semibold rounded-xl hover:from-sky-600 hover:to-blue-600 transition-all"
@@ -117,16 +121,18 @@ const getStartedUrl = computed(() => {
                   <span class="text-sm font-medium text-gray-700">Pricing</span>
                 </router-link>
                 <hr class="my-2">
-                <SignOutButton redirectUrl="/">
-                  <button
-                    class="flex items-center gap-3 px-4 py-3 hover:bg-red-50 transition-colors w-full text-left"
-                  >
-                    <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                    </svg>
-                    <span class="text-sm font-medium text-red-600">Sign Out</span>
-                  </button>
-                </SignOutButton>
+                <ClientOnly>
+                  <SignOutButton redirectUrl="/">
+                    <button
+                      class="flex items-center gap-3 px-4 py-3 hover:bg-red-50 transition-colors w-full text-left"
+                    >
+                      <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                      </svg>
+                      <span class="text-sm font-medium text-red-600">Sign Out</span>
+                    </button>
+                  </SignOutButton>
+                </ClientOnly>
               </div>
             </div>
           </div>
@@ -170,14 +176,16 @@ const getStartedUrl = computed(() => {
               >
                 View Pricing
               </router-link>
-              <SignInButton
-                mode="modal"
-                afterSignInUrl="/app/create"
-              >
-                <button class="block w-full px-6 py-2 border-2 border-gray-600 text-gray-300 hover:text-white hover:border-gray-400 rounded-lg transition-all text-sm font-medium">
-                  Already have an account? Sign In
-                </button>
-              </SignInButton>
+              <ClientOnly>
+                <SignInButton
+                  mode="modal"
+                  afterSignInUrl="/app/create"
+                >
+                  <button class="block w-full px-6 py-2 border-2 border-gray-600 text-gray-300 hover:text-white hover:border-gray-400 rounded-lg transition-all text-sm font-medium">
+                    Already have an account? Sign In
+                  </button>
+                </SignInButton>
+              </ClientOnly>
             </div>
             <router-link
               v-else

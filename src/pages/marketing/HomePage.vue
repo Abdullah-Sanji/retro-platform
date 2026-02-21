@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { useUser } from '@clerk/vue'
+import { useSafeUser } from '@/composables/useSafeUser'
 import JoinModal from '@/components/shared/JoinModal.vue'
 import { useQuery, useMutation } from '@/composables/useConvex'
 import { api } from '../../../convex/_generated/api'
@@ -18,7 +18,7 @@ useSeo({
 
 const router = useRouter()
 const notification = useNotification()
-const { isSignedIn } = useUser()
+const { isSignedIn } = useSafeUser()
 const { isFullPermissionMode } = useFullPermission()
 
 const joinLink = ref<string>('')

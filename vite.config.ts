@@ -17,9 +17,9 @@ export default defineConfig({
 
   // SSG Configuration for vite-ssg
   ssgOptions: {
-    // Disable SSG completely due to Clerk authentication throughout the app
+    // Pre-render public marketing pages only (auth pages remain SPA)
     includedRoutes() {
-      return []
+      return ['/', '/features', '/pricing']
     },
     formatting: 'minify',
     criticalCSS: false,

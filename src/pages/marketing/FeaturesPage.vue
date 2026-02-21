@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useUser } from '@clerk/vue'
+import { useSafeUser } from '@/composables/useSafeUser'
 import { useQuery } from '@/composables/useConvex'
 import { useFullPermission } from '@/composables/useFullPermission'
 import { api } from '../../../convex/_generated/api'
@@ -51,7 +51,7 @@ const features = [
   },
 ]
 
-const { user } = useUser()
+const { user } = useSafeUser()
 const { isFullPermissionMode } = useFullPermission()
 
 const userData = useQuery(
