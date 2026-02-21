@@ -135,7 +135,7 @@ const JoinModal = /* @__PURE__ */ _export_sfc(_sfc_main$3, [["__scopeId", "data-
 const api = anyApi;
 componentsGeneric();
 function useSeo(options) {
-  const siteUrl = "https://yourapp.com";
+  const siteUrl = "https://retro-live.netlify.app";
   const siteName = "Retrospective Platform";
   const fullTitle = computed(() => `${options.title} | ${siteName}`);
   const ogImageUrl = computed(

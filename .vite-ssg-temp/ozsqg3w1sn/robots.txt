@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /app/
 
-Sitemap: https://yourapp.com/sitemap.xml
+Sitemap: https://retro-live.netlify.app/sitemap.xml

@@ -58,10 +58,7 @@ export function usePayPal() {
    */
   const manageBilling = async (subscriptionId: string) => {
     try {
-      // Open PayPal's subscription management in new tab
-      const paypalManageUrl = 'https://www.sandbox.paypal.com/myaccount/autopay/' // Sandbox
-      // For production: 'https://www.paypal.com/myaccount/autopay/'
-      window.open(paypalManageUrl, '_blank')
+      window.open('https://www.paypal.com/myaccount/autopay/', '_blank')
     } catch (error) {
       console.error('Billing management error:', error)
       throw error
