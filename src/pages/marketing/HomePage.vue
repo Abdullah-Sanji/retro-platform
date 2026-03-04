@@ -8,12 +8,45 @@ import { api } from '../../../convex/_generated/api'
 import { useNotification } from '@/composables/useNotification'
 import { useSeo } from '@/composables/useSeo'
 import { useFullPermission } from '@/composables/useFullPermission'
+import { useHead } from '@unhead/vue'
 
 // SEO
 useSeo({
   title: 'AI-Powered Retrospective Platform - Turn Feedback into Action',
   description: 'The only retrospective platform with AI-powered action items. Automatically generate actionable insights from team feedback, export to Word, and drive real change.',
   keywords: 'AI retrospective, AI action items, retro platform, agile, scrum, team collaboration, sprint retrospective, AI-powered',
+})
+
+useHead({
+  script: [
+    {
+      type: 'application/ld+json',
+      innerHTML: JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'SoftwareApplication',
+        name: 'RetroPlatform',
+        url: 'https://www.retro-platform.com',
+        applicationCategory: 'BusinessApplication',
+        operatingSystem: 'Web',
+        description: 'AI-powered retrospective platform that automatically generates action items from team feedback. Run sprint retrospectives online with real-time collaboration, anonymous voting, and Word export.',
+        offers: {
+          '@type': 'Offer',
+          price: '0',
+          priceCurrency: 'USD',
+          description: 'Free plan available',
+        },
+        featureList: [
+          'AI-generated action items',
+          'Real-time collaboration',
+          'Anonymous feedback',
+          'Word document export',
+          'Sprint retrospective templates',
+          'Team voting',
+        ],
+        screenshot: 'https://www.retro-platform.com/og-default.svg',
+      }),
+    },
+  ],
 })
 
 const router = useRouter()
