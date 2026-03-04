@@ -10,7 +10,7 @@ interface SeoOptions {
 
 export function useSeo(options: SeoOptions) {
   // Use placeholder domain (update when domain is ready)
-  const siteUrl = import.meta.env.VITE_SITE_URL || 'https://retro-live.netlify.app'
+  const siteUrl = import.meta.env.VITE_SITE_URL || 'https://www.retro-platform.com'
   const siteName = 'Retrospective Platform'
 
   const fullTitle = computed(() => `${options.title} | ${siteName}`)
