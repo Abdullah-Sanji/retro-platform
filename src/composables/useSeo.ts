@@ -6,11 +6,12 @@ interface SeoOptions {
   description: string
   keywords?: string
   ogImage?: string
+  canonicalPath?: string
 }
 
 export function useSeo(options: SeoOptions) {
-  // Use placeholder domain (update when domain is ready)
-  const siteUrl = import.meta.env.VITE_SITE_URL || 'https://www.retro-platform.com'
+  // Canonical domain — hardcoded to prevent Netlify's env vars from overriding
+  const siteUrl = 'https://retro-platform.com'
   const siteName = 'Retrospective Platform'
 
   const fullTitle = computed(() => `${options.title} | ${siteName}`)
@@ -20,8 +21,13 @@ export function useSeo(options: SeoOptions) {
       : `${siteUrl}${options.ogImage || '/og-default.svg'}`
   )
 
+  const canonicalUrl = computed(() =>
+    options.canonicalPath !== undefined ? `${siteUrl}${options.canonicalPath}` : undefined
+  )
+
   useHead({
     title: fullTitle.value,
+    link: canonicalUrl.value ? [{ rel: 'canonical', href: canonicalUrl.value }] : [],
     meta: [
       { name: 'description', content: options.description },
       { name: 'keywords', content: options.keywords || '' },

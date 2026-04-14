@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /app/
 
-Sitemap: https://www.retro-platform.com/sitemap.xml
+Sitemap: https://retro-platform.com/sitemap.xml

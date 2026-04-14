@@ -10,6 +10,7 @@ useSeo({
   title: 'Features - Powerful Retrospective Tools',
   description: 'Real-time collaboration, anonymous feedback, smart voting, and action tracking. Everything you need for effective team retrospectives.',
   keywords: 'retrospective features, retro tools, agile features, team collaboration tools',
+  canonicalPath: '/features',
 })
 
 const features = [

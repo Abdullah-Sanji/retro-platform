@@ -15,6 +15,7 @@ useSeo({
   title: 'Pricing - Simple, Transparent Plans',
   description: 'Simple, transparent pricing for teams of all sizes. Start free, upgrade as you grow.',
   keywords: 'retrospective pricing, retro tool cost, agile tool pricing',
+  canonicalPath: '/pricing',
 })
 
 const router = useRouter()

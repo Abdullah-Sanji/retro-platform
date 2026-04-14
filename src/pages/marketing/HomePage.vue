@@ -15,6 +15,7 @@ useSeo({
   title: 'AI-Powered Retrospective Platform - Turn Feedback into Action',
   description: 'The only retrospective platform with AI-powered action items. Automatically generate actionable insights from team feedback, export to Word, and drive real change.',
   keywords: 'AI retrospective, AI action items, retro platform, agile, scrum, team collaboration, sprint retrospective, AI-powered',
+  canonicalPath: '/',
 })
 
 useHead({
@@ -25,7 +26,7 @@ useHead({
         '@context': 'https://schema.org',
         '@type': 'SoftwareApplication',
         name: 'RetroPlatform',
-        url: 'https://www.retro-platform.com',
+        url: 'https://retro-platform.com',
         applicationCategory: 'BusinessApplication',
         operatingSystem: 'Web',
         description: 'AI-powered retrospective platform that automatically generates action items from team feedback. Run sprint retrospectives online with real-time collaboration, anonymous voting, and Word export.',
@@ -43,7 +44,7 @@ useHead({
           'Sprint retrospective templates',
           'Team voting',
         ],
-        screenshot: 'https://www.retro-platform.com/og-default.svg',
+        screenshot: 'https://retro-platform.com/og-default.svg',
       }),
     },
   ],

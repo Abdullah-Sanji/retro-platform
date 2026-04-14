@@ -7,3 +7,10 @@
   to = "https://retro-platform.com/:splat"
   status = 301
   force = true
+
+# Redirect www to non-www
+[[redirects]]
+  from = "https://www.retro-platform.com/*"
+  to = "https://retro-platform.com/:splat"
+  status = 301
+  force = true
