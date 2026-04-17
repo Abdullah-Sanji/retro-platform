@@ -157,7 +157,7 @@ const getStartedUrl = computed(() => {
               <LogoIcon size="md" />
               <h3 class="text-xl font-bold">RetroPlatform</h3>
             </div>
-            <p class="text-gray-400">AI-powered retrospectives for modern teams.</p>
+            <p class="text-gray-400">The AI-powered retrospective platform for modern agile teams.</p>
           </div>
           <div>
             <h4 class="font-semibold mb-3">Product</h4>

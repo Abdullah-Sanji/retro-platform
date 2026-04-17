@@ -1,1 +1,14 @@
-/* /index.html 200
+# Rules are processed top-to-bottom, first match wins.
+# _redirects is evaluated BEFORE netlify.toml, so hostname redirects must live here.
+
+# Force Netlify-assigned subdomain to canonical custom domain (301, force)
+https://retro-live.netlify.app/*  https://retro-platform.com/:splat  301!
+
+# Force www to apex
+https://www.retro-platform.com/*  https://retro-platform.com/:splat  301!
+
+# SPA fallback for client-routed app pages only.
+# Marketing routes (/, /features, /pricing) are pre-rendered to .html files and
+# served directly by Netlify's file matching, so they must NOT be caught here.
+/app/*      /index.html  200
+/dashboard  /index.html  200

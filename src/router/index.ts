@@ -14,9 +14,9 @@ export const routes: RouteRecordRaw[] = [
         name: 'home',
         component: () => import('@/pages/marketing/HomePage.vue'),
         meta: {
-          title: 'Retrospective Platform - Real-time Team Collaboration',
-          description: 'Empower your team with engaging, structured retrospectives that drive real change.',
-          keywords: 'retrospective, retro platform, agile, scrum, team collaboration',
+          title: 'AI-Powered Retrospective Platform - Turn Feedback into Action',
+          description: 'The only retrospective platform with AI-powered action items. Run sprint retrospectives with anonymous voting, real-time collaboration, and Word export.',
+          keywords: 'retrospective platform, AI retrospective, retro platform, sprint retrospective, agile retrospective, scrum retrospective, team collaboration',
         },
         // Redirect if ?session query param is present
         beforeEnter: (to, from, next) => {

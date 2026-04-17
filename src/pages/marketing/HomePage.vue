@@ -259,10 +259,10 @@ const getStartedUrl = computed(() => {
         <div class="mb-20">
           <div class="text-center mb-12">
             <h2 class="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
-              Powered by <span class="bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent">Artificial Intelligence</span>
+              The <span class="bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent">AI-Powered Retrospective Platform</span>
             </h2>
             <p class="text-xl text-gray-600 max-w-2xl mx-auto">
-              Let AI do the heavy lifting. Focus on what matters - improving your team.
+              The only retrospective platform that drafts action items for you — so your team spends less time writing and more time improving.
             </p>
           </div>
 

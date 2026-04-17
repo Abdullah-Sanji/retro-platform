@@ -1,16 +1,4 @@
 [build]
   publish = "dist"
 
-# Ensure the Netlify subdomain 301 redirects to the canonical custom domain
-[[redirects]]
-  from = "https://retro-live.netlify.app/*"
-  to = "https://retro-platform.com/:splat"
-  status = 301
-  force = true
-
-# Redirect www to non-www
-[[redirects]]
-  from = "https://www.retro-platform.com/*"
-  to = "https://retro-platform.com/:splat"
-  status = 301
-  force = true
+# Redirects live in public/_redirects so they're evaluated first by Netlify.
